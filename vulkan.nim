@@ -1,0 +1,4700 @@
+ {.deadCodeElim: on.}
+when defined(windows):
+  const
+    vulkandll* = "vulkan.dll"
+elif defined(macosx):
+  const
+    vulkandll* = "libvulkan.dylib"
+else:
+  const
+    vulkandll* = "libvulkan.so"
+
+
+
+type
+  Handle* = uint64
+  NonDispatchableHandle* = uint64
+  Instance* = distinct Handle
+  PhysicalDevice* = distinct Handle
+  Device* = distinct Handle
+  Queue* = distinct Handle
+  Semaphore* = distinct NonDispatchableHandle
+  CommandBuffer* = distinct Handle
+  Fence* = distinct NonDispatchableHandle
+  DeviceMemory* = distinct NonDispatchableHandle
+  Buffer* = distinct NonDispatchableHandle
+  Image* = distinct NonDispatchableHandle
+  Event* = distinct NonDispatchableHandle
+  QueryPool* = distinct NonDispatchableHandle
+  BufferView* = distinct NonDispatchableHandle
+  ImageView* = distinct NonDispatchableHandle
+  ShaderModule* = distinct NonDispatchableHandle
+  PipelineCache* = distinct NonDispatchableHandle
+  PipelineLayout* = distinct NonDispatchableHandle
+  RenderPass* = distinct NonDispatchableHandle
+  Pipeline* = distinct NonDispatchableHandle
+  DescriptorSetLayout* = distinct NonDispatchableHandle
+  Sampler* = distinct NonDispatchableHandle
+  DescriptorPool* = distinct NonDispatchableHandle
+  DescriptorSet* = distinct NonDispatchableHandle
+  Framebuffer* = distinct NonDispatchableHandle
+  CommandPool* = distinct NonDispatchableHandle
+
+  SurfaceKHR* = distinct NonDispatchableHandle
+  SwapchainKHR* = distinct NonDispatchableHandle
+  DisplayKHR* = distinct NonDispatchableHandle
+  DisplayModeKHR* = distinct NonDispatchableHandle
+  DescriptorUpdateTemplateKHR* = distinct NonDispatchableHandle
+  DebugReportCallbackEXT* = distinct NonDispatchableHandle
+  ObjectTableNVX* = distinct NonDispatchableHandle
+  IndirectCommandsLayoutNVX* = distinct NonDispatchableHandle
+
+
+const
+  VERSION_1_0* = 1
+
+
+template MAKE_VERSION*(major, minor, patch: untyped): untyped =
+  (((major) shl 22) or ((minor) shl 12) or (patch))
+
+
+const
+  API_VERSION_1_0* = MAKE_VERSION(1, 0, 0)
+
+template VERSION_MAJOR*(version: untyped): untyped =
+  ((uint32)(version) shr 22)
+
+template VERSION_MINOR*(version: untyped): untyped =
+  (((uint32)(version) shr 12) and 0x000003FF)
+
+template VERSION_PATCH*(version: untyped): untyped =
+  ((uint32)(version) and 0x00000FFF)
+
+
+const
+  HEADER_VERSION* = 47
+  NULL_HANDLE* = 0
+
+
+type
+  Flags* = uint32
+  Bool32* = uint32
+  DeviceSize* = uint64
+  SampleMask* = uint32
+
+const
+  LOD_CLAMP_NONE* = 1000.0
+  REMAINING_MIP_LEVELS* = (not 0)
+  REMAINING_ARRAY_LAYERS* = (not 0)
+  WHOLE_SIZE* = (not 0)
+  ATTACHMENT_UNUSED* = (not 0)
+  TRUE* = 1
+  FALSE* = 0
+  QUEUE_FAMILY_IGNORED* = (not 0)
+  SUBPASS_EXTERNAL* = (not 0)
+  MAX_PHYSICAL_DEVICE_NAME_SIZE* = 256
+  UUID_SIZE* = 16
+  MAX_MEMORY_TYPES* = 32
+  MAX_MEMORY_HEAPS* = 16
+  MAX_EXTENSION_NAME_SIZE* = 256
+  MAX_DESCRIPTION_SIZE* = 256
+
+type
+  PipelineCacheHeaderVersion* {.size: sizeof(cint).} = enum
+    PIPELINE_CACHE_HEADER_VERSION_ONE = 1
+  Result* {.size: sizeof(cint).} = enum
+    ERROR_INVALID_EXTERNAL_HANDLE_KHX = - 1000072003,
+    ERROR_OUT_OF_POOL_MEMORY_KHR = - 1000069000,
+    ERROR_INVALID_SHADER_NV = - 1000012000,
+    ERROR_VALIDATION_FAILED_EXT = - 1000011001,
+    ERROR_INCOMPATIBLE_DISPLAY_KHR = - 1000003001,
+    ERROR_OUT_OF_DATE_KHR = - 1000001004,
+    ERROR_NATIVE_WINDOW_IN_USE_KHR = - 1000000001,
+    ERROR_SURFACE_LOST_KHR = - 1000000000, ERROR_FRAGMENTED_POOL = - 12,
+    ERROR_FORMAT_NOT_SUPPORTED = - 11, ERROR_TOO_MANY_OBJECTS = - 10,
+    ERROR_INCOMPATIBLE_DRIVER = - 9, ERROR_FEATURE_NOT_PRESENT = - 8,
+    ERROR_EXTENSION_NOT_PRESENT = - 7, ERROR_LAYER_NOT_PRESENT = - 6,
+    ERROR_MEMORY_MAP_FAILED = - 5, ERROR_DEVICE_LOST = - 4,
+    ERROR_INITIALIZATION_FAILED = - 3, ERROR_OUT_OF_DEVICE_MEMORY = - 2,
+    ERROR_OUT_OF_HOST_MEMORY = - 1, SUCCESS = 0, NOT_READY = 1, TIMEOUT = 2, EVENT_SET = 3,
+    EVENT_RESET = 4, INCOMPLETE = 5, SUBOPTIMAL_KHR = 1000001003
+  StructureType* {.size: sizeof(cint).} = enum
+    STRUCTURE_TYPE_APPLICATION_INFO = 0, STRUCTURE_TYPE_INSTANCE_CREATE_INFO = 1,
+    STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO = 2,
+    STRUCTURE_TYPE_DEVICE_CREATE_INFO = 3, STRUCTURE_TYPE_SUBMIT_INFO = 4,
+    STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO = 5,
+    STRUCTURE_TYPE_MAPPED_MEMORY_RANGE = 6, STRUCTURE_TYPE_BIND_SPARSE_INFO = 7,
+    STRUCTURE_TYPE_FENCE_CREATE_INFO = 8, STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO = 9,
+    STRUCTURE_TYPE_EVENT_CREATE_INFO = 10,
+    STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO = 11,
+    STRUCTURE_TYPE_BUFFER_CREATE_INFO = 12,
+    STRUCTURE_TYPE_BUFFER_VIEW_CREATE_INFO = 13,
+    STRUCTURE_TYPE_IMAGE_CREATE_INFO = 14,
+    STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO = 15,
+    STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO = 16,
+    STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO = 17,
+    STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO = 18,
+    STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO = 19,
+    STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO = 20,
+    STRUCTURE_TYPE_PIPELINE_TESSELLATION_STATE_CREATE_INFO = 21,
+    STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO = 22,
+    STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO = 23,
+    STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO = 24,
+    STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO = 25,
+    STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO = 26,
+    STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO = 27,
+    STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO = 28,
+    STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO = 29,
+    STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO = 30,
+    STRUCTURE_TYPE_SAMPLER_CREATE_INFO = 31,
+    STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO = 32,
+    STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO = 33,
+    STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO = 34,
+    STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET = 35,
+    STRUCTURE_TYPE_COPY_DESCRIPTOR_SET = 36,
+    STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO = 37,
+    STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO = 38,
+    STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO = 39,
+    STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO = 40,
+    STRUCTURE_TYPE_COMMAND_BUFFER_INHERITANCE_INFO = 41,
+    STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO = 42,
+    STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO = 43,
+    STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER = 44,
+    STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER = 45, STRUCTURE_TYPE_MEMORY_BARRIER = 46,
+    STRUCTURE_TYPE_LOADER_INSTANCE_CREATE_INFO = 47,
+    STRUCTURE_TYPE_LOADER_DEVICE_CREATE_INFO = 48,
+    STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR = 1000001000,
+    STRUCTURE_TYPE_PRESENT_INFO_KHR = 1000001001,
+    STRUCTURE_TYPE_DISPLAY_MODE_CREATE_INFO_KHR = 1000002000,
+    STRUCTURE_TYPE_DISPLAY_SURFACE_CREATE_INFO_KHR = 1000002001,
+    STRUCTURE_TYPE_DISPLAY_PRESENT_INFO_KHR = 1000003000,
+    STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR = 1000004000,
+    STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR = 1000005000,
+    STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR = 1000006000,
+    STRUCTURE_TYPE_MIR_SURFACE_CREATE_INFO_KHR = 1000007000,
+    STRUCTURE_TYPE_ANDROID_SURFACE_CREATE_INFO_KHR = 1000008000,
+    STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR = 1000009000,
+    STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT = 1000011000, STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_RASTERIZATION_ORDER_AMD = 1000018000,
+    STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_NAME_INFO_EXT = 1000022000,
+    STRUCTURE_TYPE_DEBUG_MARKER_OBJECT_TAG_INFO_EXT = 1000022001,
+    STRUCTURE_TYPE_DEBUG_MARKER_MARKER_INFO_EXT = 1000022002,
+    STRUCTURE_TYPE_DEDICATED_ALLOCATION_IMAGE_CREATE_INFO_NV = 1000026000,
+    STRUCTURE_TYPE_DEDICATED_ALLOCATION_BUFFER_CREATE_INFO_NV = 1000026001,
+    STRUCTURE_TYPE_DEDICATED_ALLOCATION_MEMORY_ALLOCATE_INFO_NV = 1000026002,
+    STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO_KHX = 1000053000,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_FEATURES_KHX = 1000053001,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PROPERTIES_KHX = 1000053002,
+    STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO_NV = 1000056000,
+    STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_NV = 1000056001,
+    STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_NV = 1000057000,
+    STRUCTURE_TYPE_EXPORT_MEMORY_WIN32_HANDLE_INFO_NV = 1000057001,
+    STRUCTURE_TYPE_WIN32_KEYED_MUTEX_ACQUIRE_RELEASE_INFO_NV = 1000058000,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2_KHR = 1000059000,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2_KHR = 1000059001,
+    STRUCTURE_TYPE_FORMAT_PROPERTIES_2_KHR = 1000059002,
+    STRUCTURE_TYPE_IMAGE_FORMAT_PROPERTIES_2_KHR = 1000059003,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_IMAGE_FORMAT_INFO_2_KHR = 1000059004,
+    STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2_KHR = 1000059005,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2_KHR = 1000059006,
+    STRUCTURE_TYPE_SPARSE_IMAGE_FORMAT_PROPERTIES_2_KHR = 1000059007,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_SPARSE_IMAGE_FORMAT_INFO_2_KHR = 1000059008,
+    STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO_KHX = 1000060000,
+    STRUCTURE_TYPE_BIND_BUFFER_MEMORY_INFO_KHX = 1000060001,
+    STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO_KHX = 1000060002,
+    STRUCTURE_TYPE_DEVICE_GROUP_RENDER_PASS_BEGIN_INFO_KHX = 1000060003,
+    STRUCTURE_TYPE_DEVICE_GROUP_COMMAND_BUFFER_BEGIN_INFO_KHX = 1000060004,
+    STRUCTURE_TYPE_DEVICE_GROUP_SUBMIT_INFO_KHX = 1000060005,
+    STRUCTURE_TYPE_DEVICE_GROUP_BIND_SPARSE_INFO_KHX = 1000060006,
+    STRUCTURE_TYPE_DEVICE_GROUP_PRESENT_CAPABILITIES_KHX = 1000060007,
+    STRUCTURE_TYPE_IMAGE_SWAPCHAIN_CREATE_INFO_KHX = 1000060008,
+    STRUCTURE_TYPE_BIND_IMAGE_MEMORY_SWAPCHAIN_INFO_KHX = 1000060009,
+    STRUCTURE_TYPE_ACQUIRE_NEXT_IMAGE_INFO_KHX = 1000060010,
+    STRUCTURE_TYPE_DEVICE_GROUP_PRESENT_INFO_KHX = 1000060011,
+    STRUCTURE_TYPE_DEVICE_GROUP_SWAPCHAIN_CREATE_INFO_KHX = 1000060012,
+    STRUCTURE_TYPE_VALIDATION_FLAGS_EXT = 1000061000,
+    STRUCTURE_TYPE_VI_SURFACE_CREATE_INFO_NN = 1000062000,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_GROUP_PROPERTIES_KHX = 1000070000,
+    STRUCTURE_TYPE_DEVICE_GROUP_DEVICE_CREATE_INFO_KHX = 1000070001,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_IMAGE_FORMAT_INFO_KHX = 1000071000,
+    STRUCTURE_TYPE_EXTERNAL_IMAGE_FORMAT_PROPERTIES_KHX = 1000071001,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_BUFFER_INFO_KHX = 1000071002,
+    STRUCTURE_TYPE_EXTERNAL_BUFFER_PROPERTIES_KHX = 1000071003,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_ID_PROPERTIES_KHX = 1000071004,
+    STRUCTURE_TYPE_EXTERNAL_MEMORY_BUFFER_CREATE_INFO_KHX = 1000072000,
+    STRUCTURE_TYPE_EXTERNAL_MEMORY_IMAGE_CREATE_INFO_KHX = 1000072001,
+    STRUCTURE_TYPE_EXPORT_MEMORY_ALLOCATE_INFO_KHX = 1000072002,
+    STRUCTURE_TYPE_IMPORT_MEMORY_WIN32_HANDLE_INFO_KHX = 1000073000,
+    STRUCTURE_TYPE_EXPORT_MEMORY_WIN32_HANDLE_INFO_KHX = 1000073001,
+    STRUCTURE_TYPE_MEMORY_WIN32_HANDLE_PROPERTIES_KHX = 1000073002,
+    STRUCTURE_TYPE_IMPORT_MEMORY_FD_INFO_KHX = 1000074000,
+    STRUCTURE_TYPE_MEMORY_FD_PROPERTIES_KHX = 1000074001,
+    STRUCTURE_TYPE_WIN32_KEYED_MUTEX_ACQUIRE_RELEASE_INFO_KHX = 1000075000,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_EXTERNAL_SEMAPHORE_INFO_KHX = 1000076000,
+    STRUCTURE_TYPE_EXTERNAL_SEMAPHORE_PROPERTIES_KHX = 1000076001,
+    STRUCTURE_TYPE_EXPORT_SEMAPHORE_CREATE_INFO_KHX = 1000077000,
+    STRUCTURE_TYPE_IMPORT_SEMAPHORE_WIN32_HANDLE_INFO_KHX = 1000078000,
+    STRUCTURE_TYPE_EXPORT_SEMAPHORE_WIN32_HANDLE_INFO_KHX = 1000078001,
+    STRUCTURE_TYPE_D3D12_FENCE_SUBMIT_INFO_KHX = 1000078002,
+    STRUCTURE_TYPE_IMPORT_SEMAPHORE_FD_INFO_KHX = 1000079000,
+    STRUCTURE_TYPE_PHYSICAL_DEVICE_PUSH_DESCRIPTOR_PROPERTIES_KHR = 1000080000,
+    STRUCTURE_TYPE_PRESENT_REGIONS_KHR = 1000084000,
+    STRUCTURE_TYPE_DESCRIPTOR_UPDATE_TEMPLATE_CREATE_INFO_KHR = 1000085000,
+    STRUCTURE_TYPE_OBJECT_TABLE_CREATE_INFO_NVX = 1000086000,
+    STRUCTURE_TYPE_INDIRECT_COMMANDS_LAYOUT_CREATE_INFO_NVX = 1000086001,
+    STRUCTURE_TYPE_CMD_PROCESS_COMMANDS_INFO_NVX = 1000086002,
+    STRUCTURE_TYPE_CMD_RESERVE_SPACE_FOR_COMMANDS_INFO_NVX = 1000086003,
+    STRUCTURE_TYPE_DEVICE_GENERATED_COMMANDS_LIMITS_NVX = 1000086004,
+    STRUCTURE_TYPE_DEVICE_GENERATED_COMMANDS_FEATURES_NVX = 1000086005, STRUCTURE_TYPE_PIPELINE_VIEWPORT_W_SCALING_STATE_CREATE_INFO_NV = 1000087000,
+    STRUCTURE_TYPE_SURFACE_CAPABILITIES2_EXT = 1000090000,
+    STRUCTURE_TYPE_DISPLAY_POWER_INFO_EXT = 1000091000,
+    STRUCTURE_TYPE_DEVICE_EVENT_INFO_EXT = 1000091001,
+    STRUCTURE_TYPE_DISPLAY_EVENT_INFO_EXT = 1000091002,
+    STRUCTURE_TYPE_SWAPCHAIN_COUNTER_CREATE_INFO_EXT = 1000091003,
+    STRUCTURE_TYPE_PRESENT_TIMES_INFO_GOOGLE = 1000092000, STRUCTURE_TYPE_PHYSICAL_DEVICE_MULTIVIEW_PER_VIEW_ATTRIBUTES_PROPERTIES_NVX = 1000097000,
+    STRUCTURE_TYPE_PIPELINE_VIEWPORT_SWIZZLE_STATE_CREATE_INFO_NV = 1000098000, STRUCTURE_TYPE_PHYSICAL_DEVICE_DISCARD_RECTANGLE_PROPERTIES_EXT = 1000099000, STRUCTURE_TYPE_PIPELINE_DISCARD_RECTANGLE_STATE_CREATE_INFO_EXT = 1000099001,
+    STRUCTURE_TYPE_HDR_METADATA_EXT = 1000105000,
+    STRUCTURE_TYPE_IOS_SURFACE_CREATE_INFO_MVK = 1000122000,
+    STRUCTURE_TYPE_MACOS_SURFACE_CREATE_INFO_MVK = 1000123000
+  SystemAllocationScope* {.size: sizeof(cint).} = enum
+    SYSTEM_ALLOCATION_SCOPE_COMMAND = 0, SYSTEM_ALLOCATION_SCOPE_OBJECT = 1,
+    SYSTEM_ALLOCATION_SCOPE_CACHE = 2, SYSTEM_ALLOCATION_SCOPE_DEVICE = 3,
+    SYSTEM_ALLOCATION_SCOPE_INSTANCE = 4
+  InternalAllocationType* {.size: sizeof(cint).} = enum
+    EXECUTABLE = 0
+  Format* {.size: sizeof(cint).} = enum
+    UNDEFINED = 0, R4G4_UNORM_PACK8 = 1, R4G4B4A4_UNORM_PACK16 = 2,
+    B4G4R4A4_UNORM_PACK16 = 3, R5G6B5_UNORM_PACK16 = 4, B5G6R5_UNORM_PACK16 = 5,
+    R5G5B5A1_UNORM_PACK16 = 6, B5G5R5A1_UNORM_PACK16 = 7, A1R5G5B5_UNORM_PACK16 = 8,
+    R8_UNORM = 9, R8_SNORM = 10, R8_USCALED = 11, R8_SSCALED = 12, R8_UINT = 13, R8_SINT = 14,
+    R8_SRGB = 15, R8G8_UNORM = 16, R8G8_SNORM = 17, R8G8_USCALED = 18, R8G8_SSCALED = 19,
+    R8G8_UINT = 20, R8G8_SINT = 21, R8G8_SRGB = 22, R8G8B8_UNORM = 23, R8G8B8_SNORM = 24,
+    R8G8B8_USCALED = 25, R8G8B8_SSCALED = 26, R8G8B8_UINT = 27, R8G8B8_SINT = 28,
+    R8G8B8_SRGB = 29, B8G8R8_UNORM = 30, B8G8R8_SNORM = 31, B8G8R8_USCALED = 32,
+    B8G8R8_SSCALED = 33, B8G8R8_UINT = 34, B8G8R8_SINT = 35, B8G8R8_SRGB = 36,
+    R8G8B8A8_UNORM = 37, R8G8B8A8_SNORM = 38, R8G8B8A8_USCALED = 39,
+    R8G8B8A8_SSCALED = 40, R8G8B8A8_UINT = 41, R8G8B8A8_SINT = 42, R8G8B8A8_SRGB = 43,
+    B8G8R8A8_UNORM = 44, B8G8R8A8_SNORM = 45, B8G8R8A8_USCALED = 46,
+    B8G8R8A8_SSCALED = 47, B8G8R8A8_UINT = 48, B8G8R8A8_SINT = 49, B8G8R8A8_SRGB = 50,
+    A8B8G8R8_UNORM_PACK32 = 51, A8B8G8R8_SNORM_PACK32 = 52,
+    A8B8G8R8_USCALED_PACK32 = 53, A8B8G8R8_SSCALED_PACK32 = 54,
+    A8B8G8R8_UINT_PACK32 = 55, A8B8G8R8_SINT_PACK32 = 56, A8B8G8R8_SRGB_PACK32 = 57,
+    A2R10G10B10_UNORM_PACK32 = 58, A2R10G10B10_SNORM_PACK32 = 59,
+    A2R10G10B10_USCALED_PACK32 = 60, A2R10G10B10_SSCALED_PACK32 = 61,
+    A2R10G10B10_UINT_PACK32 = 62, A2R10G10B10_SINT_PACK32 = 63,
+    A2B10G10R10_UNORM_PACK32 = 64, A2B10G10R10_SNORM_PACK32 = 65,
+    A2B10G10R10_USCALED_PACK32 = 66, A2B10G10R10_SSCALED_PACK32 = 67,
+    A2B10G10R10_UINT_PACK32 = 68, A2B10G10R10_SINT_PACK32 = 69, R16_UNORM = 70,
+    R16_SNORM = 71, R16_USCALED = 72, R16_SSCALED = 73, R16_UINT = 74, R16_SINT = 75,
+    R16_SFLOAT = 76, R16G16_UNORM = 77, R16G16_SNORM = 78, R16G16_USCALED = 79,
+    R16G16_SSCALED = 80, R16G16_UINT = 81, R16G16_SINT = 82, R16G16_SFLOAT = 83,
+    R16G16B16_UNORM = 84, R16G16B16_SNORM = 85, R16G16B16_USCALED = 86,
+    R16G16B16_SSCALED = 87, R16G16B16_UINT = 88, R16G16B16_SINT = 89,
+    R16G16B16_SFLOAT = 90, R16G16B16A16_UNORM = 91, R16G16B16A16_SNORM = 92,
+    R16G16B16A16_USCALED = 93, R16G16B16A16_SSCALED = 94, R16G16B16A16_UINT = 95,
+    R16G16B16A16_SINT = 96, R16G16B16A16_SFLOAT = 97, R32_UINT = 98, R32_SINT = 99,
+    R32_SFLOAT = 100, R32G32_UINT = 101, R32G32_SINT = 102, R32G32_SFLOAT = 103,
+    R32G32B32_UINT = 104, R32G32B32_SINT = 105, R32G32B32_SFLOAT = 106,
+    R32G32B32A32_UINT = 107, R32G32B32A32_SINT = 108, R32G32B32A32_SFLOAT = 109,
+    R64_UINT = 110, R64_SINT = 111, R64_SFLOAT = 112, R64G64_UINT = 113, R64G64_SINT = 114,
+    R64G64_SFLOAT = 115, R64G64B64_UINT = 116, R64G64B64_SINT = 117,
+    R64G64B64_SFLOAT = 118, R64G64B64A64_UINT = 119, R64G64B64A64_SINT = 120,
+    R64G64B64A64_SFLOAT = 121, B10G11R11_UFLOAT_PACK32 = 122,
+    E5B9G9R9_UFLOAT_PACK32 = 123, D16_UNORM = 124, X8_D24_UNORM_PACK32 = 125,
+    D32_SFLOAT = 126, S8_UINT = 127, D16_UNORM_S8_UINT = 128, D24_UNORM_S8_UINT = 129,
+    D32_SFLOAT_S8_UINT = 130, BC1_RGB_UNORM_BLOCK = 131, BC1_RGB_SRGB_BLOCK = 132,
+    BC1_RGBA_UNORM_BLOCK = 133, BC1_RGBA_SRGB_BLOCK = 134, BC2_UNORM_BLOCK = 135,
+    BC2_SRGB_BLOCK = 136, BC3_UNORM_BLOCK = 137, BC3_SRGB_BLOCK = 138,
+    BC4_UNORM_BLOCK = 139, BC4_SNORM_BLOCK = 140, BC5_UNORM_BLOCK = 141,
+    BC5_SNORM_BLOCK = 142, BC6H_UFLOAT_BLOCK = 143, BC6H_SFLOAT_BLOCK = 144,
+    BC7_UNORM_BLOCK = 145, BC7_SRGB_BLOCK = 146, ETC2_R8G8B8_UNORM_BLOCK = 147,
+    ETC2_R8G8B8_SRGB_BLOCK = 148, ETC2_R8G8B8A1_UNORM_BLOCK = 149,
+    ETC2_R8G8B8A1_SRGB_BLOCK = 150, ETC2_R8G8B8A8_UNORM_BLOCK = 151,
+    ETC2_R8G8B8A8_SRGB_BLOCK = 152, EAC_R11_UNORM_BLOCK = 153,
+    EAC_R11_SNORM_BLOCK = 154, EAC_R11G11_UNORM_BLOCK = 155,
+    EAC_R11G11_SNORM_BLOCK = 156, ASTC_4x4_UNORM_BLOCK = 157,
+    ASTC_4x4_SRGB_BLOCK = 158, ASTC_5x4_UNORM_BLOCK = 159, ASTC_5x4_SRGB_BLOCK = 160,
+    ASTC_5x5_UNORM_BLOCK = 161, ASTC_5x5_SRGB_BLOCK = 162, ASTC_6x5_UNORM_BLOCK = 163,
+    ASTC_6x5_SRGB_BLOCK = 164, ASTC_6x6_UNORM_BLOCK = 165, ASTC_6x6_SRGB_BLOCK = 166,
+    ASTC_8x5_UNORM_BLOCK = 167, ASTC_8x5_SRGB_BLOCK = 168, ASTC_8x6_UNORM_BLOCK = 169,
+    ASTC_8x6_SRGB_BLOCK = 170, ASTC_8x8_UNORM_BLOCK = 171, ASTC_8x8_SRGB_BLOCK = 172,
+    ASTC_10x5_UNORM_BLOCK = 173, ASTC_10x5_SRGB_BLOCK = 174,
+    ASTC_10x6_UNORM_BLOCK = 175, ASTC_10x6_SRGB_BLOCK = 176,
+    ASTC_10x8_UNORM_BLOCK = 177, ASTC_10x8_SRGB_BLOCK = 178,
+    ASTC_10x10_UNORM_BLOCK = 179, ASTC_10x10_SRGB_BLOCK = 180,
+    ASTC_12x10_UNORM_BLOCK = 181, ASTC_12x10_SRGB_BLOCK = 182,
+    ASTC_12x12_UNORM_BLOCK = 183, ASTC_12x12_SRGB_BLOCK = 184,
+    PVRTC1_2BPP_UNORM_BLOCK_IMG = 1000054000,
+    PVRTC1_4BPP_UNORM_BLOCK_IMG = 1000054001,
+    PVRTC2_2BPP_UNORM_BLOCK_IMG = 1000054002,
+    PVRTC2_4BPP_UNORM_BLOCK_IMG = 1000054003,
+    PVRTC1_2BPP_SRGB_BLOCK_IMG = 1000054004,
+    PVRTC1_4BPP_SRGB_BLOCK_IMG = 1000054005,
+    PVRTC2_2BPP_SRGB_BLOCK_IMG = 1000054006,
+    PVRTC2_4BPP_SRGB_BLOCK_IMG = 1000054007
+  ImageType* {.size: sizeof(cint).} = enum
+    IMAGE_TYPE_1D = 0, IMAGE_TYPE_2D = 1, IMAGE_TYPE_3D = 2
+  ImageTiling* {.size: sizeof(cint).} = enum
+    IMAGE_TILING_OPTIMAL = 0, IMAGE_TILING_LINEAR = 1
+  PhysicalDeviceType* {.size: sizeof(cint).} = enum
+    OTHER = 0, INTEGRATED_GPU = 1, DISCRETE_GPU = 2, VIRTUAL_GPU = 3, CPU = 4
+  QueryType* {.size: sizeof(cint).} = enum
+    QUERY_TYPE_OCCLUSION = 0, QUERY_TYPE_PIPELINE_STATISTICS = 1,
+    QUERY_TYPE_TIMESTAMP = 2
+  SharingMode* {.size: sizeof(cint).} = enum
+    SHARING_MODE_EXCLUSIVE = 0, SHARING_MODE_CONCURRENT = 1
+  ImageLayout* {.size: sizeof(cint).} = enum
+    IMAGE_LAYOUT_UNDEFINED = 0, GENERAL = 1, COLOR_ATTACHMENT_OPTIMAL = 2,
+    DEPTH_STENCIL_ATTACHMENT_OPTIMAL = 3, DEPTH_STENCIL_READ_ONLY_OPTIMAL = 4,
+    SHADER_READ_ONLY_OPTIMAL = 5, TRANSFER_SRC_OPTIMAL = 6, TRANSFER_DST_OPTIMAL = 7,
+    PREINITIALIZED = 8, PRESENT_SRC_KHR = 1000001002
+  ImageViewType* {.size: sizeof(cint).} = enum
+    IMAGE_VIEW_TYPE_1D = 0, IMAGE_VIEW_TYPE_2D = 1, IMAGE_VIEW_TYPE_3D = 2,
+    IMAGE_VIEW_TYPE_CUBE = 3, IMAGE_VIEW_TYPE_1D_ARRAY = 4,
+    IMAGE_VIEW_TYPE_2D_ARRAY = 5, IMAGE_VIEW_TYPE_CUBE_ARRAY = 6
+  ComponentSwizzle* {.size: sizeof(cint).} = enum
+    COMPONENT_SWIZZLE_IDENTITY = 0, COMPONENT_SWIZZLE_ZERO = 1,
+    COMPONENT_SWIZZLE_ONE = 2, COMPONENT_SWIZZLE_R = 3, COMPONENT_SWIZZLE_G = 4,
+    COMPONENT_SWIZZLE_B = 5, COMPONENT_SWIZZLE_A = 6
+  VertexInputRate* {.size: sizeof(cint).} = enum
+    VERTEX_INPUT_RATE_VERTEX = 0, VERTEX_INPUT_RATE_INSTANCE = 1
+  PrimitiveTopology* {.size: sizeof(cint).} = enum
+    POINT_LIST = 0, LINE_LIST = 1, LINE_STRIP = 2, TRIANGLE_LIST = 3, TRIANGLE_STRIP = 4,
+    TRIANGLE_FAN = 5, LINE_LIST_WITH_ADJACENCY = 6, LINE_STRIP_WITH_ADJACENCY = 7,
+    TRIANGLE_LIST_WITH_ADJACENCY = 8, TRIANGLE_STRIP_WITH_ADJACENCY = 9,
+    PATCH_LIST = 10
+  PolygonMode* {.size: sizeof(cint).} = enum
+    FILL = 0, LINE = 1, POINT = 2
+  FrontFace* {.size: sizeof(cint).} = enum
+    COUNTER_CLOCKWISE = 0, CLOCKWISE = 1
+  CompareOp* {.size: sizeof(cint).} = enum
+    NEVER = 0, LESS = 1, EQUAL = 2, LESS_OR_EQUAL = 3, GREATER = 4, NOT_EQUAL = 5,
+    GREATER_OR_EQUAL = 6, ALWAYS = 7
+  StencilOp* {.size: sizeof(cint).} = enum
+    STENCIL_OP_KEEP = 0, STENCIL_OP_ZERO = 1, STENCIL_OP_REPLACE = 2,
+    STENCIL_OP_INCREMENT_AND_CLAMP = 3, STENCIL_OP_DECREMENT_AND_CLAMP = 4,
+    STENCIL_OP_INVERT = 5, STENCIL_OP_INCREMENT_AND_WRAP = 6,
+    STENCIL_OP_DECREMENT_AND_WRAP = 7
+  LogicOp* {.size: sizeof(cint).} = enum
+    CLEAR = 0, AND = 1, AND_REVERSE = 2, COPY = 3, AND_INVERTED = 4, NO_OP = 5, XOR = 6, OR = 7,
+    NOR = 8, EQUIVALENT = 9, INVERT = 10, OR_REVERSE = 11, COPY_INVERTED = 12,
+    OR_INVERTED = 13, NAND = 14, SET = 15
+  BlendFactor* {.size: sizeof(cint).} = enum
+    ZERO = 0, ONE = 1, SRC_COLOR = 2, ONE_MINUS_SRC_COLOR = 3, DST_COLOR = 4,
+    ONE_MINUS_DST_COLOR = 5, SRC_ALPHA = 6, ONE_MINUS_SRC_ALPHA = 7, DST_ALPHA = 8,
+    ONE_MINUS_DST_ALPHA = 9, CONSTANT_COLOR = 10, ONE_MINUS_CONSTANT_COLOR = 11,
+    CONSTANT_ALPHA = 12, ONE_MINUS_CONSTANT_ALPHA = 13, SRC_ALPHA_SATURATE = 14,
+    SRC1_COLOR = 15, ONE_MINUS_SRC1_COLOR = 16, SRC1_ALPHA = 17,
+    ONE_MINUS_SRC1_ALPHA = 18
+  BlendOp* {.size: sizeof(cint).} = enum
+    ADD = 0, SUBTRACT = 1, REVERSE_SUBTRACT = 2, MIN = 3, MAX = 4
+  DynamicState* {.size: sizeof(cint).} = enum
+    DYNAMIC_STATE_VIEWPORT = 0, SCISSOR = 1, LINE_WIDTH = 2, DEPTH_BIAS = 3,
+    BLEND_CONSTANTS = 4, DEPTH_BOUNDS = 5, STENCIL_COMPARE_MASK = 6,
+    STENCIL_WRITE_MASK = 7, STENCIL_REFERENCE = 8,
+    DYNAMIC_STATE_VIEWPORT_W_SCALING_NV = 1000087000,
+    DISCARD_RECTANGLE_EXT = 1000099000
+  Filter* {.size: sizeof(cint).} = enum
+    NEAREST = 0, LINEAR = 1, CUBIC_IMG = 1000015000
+  SamplerMipmapMode* {.size: sizeof(cint).} = enum
+    SAMPLER_MIPMAP_MODE_NEAREST = 0, SAMPLER_MIPMAP_MODE_LINEAR = 1
+  SamplerAddressMode* {.size: sizeof(cint).} = enum
+    REPEAT = 0, MIRRORED_REPEAT = 1, CLAMP_TO_EDGE = 2, CLAMP_TO_BORDER = 3,
+    MIRROR_CLAMP_TO_EDGE = 4
+  BorderColor* {.size: sizeof(cint).} = enum
+    FLOAT_TRANSPARENT_BLACK = 0, INT_TRANSPARENT_BLACK = 1, FLOAT_OPAQUE_BLACK = 2,
+    INT_OPAQUE_BLACK = 3, FLOAT_OPAQUE_WHITE = 4, INT_OPAQUE_WHITE = 5
+  DescriptorType* {.size: sizeof(cint).} = enum
+    DESCRIPTOR_TYPE_SAMPLER = 0, COMBINED_IMAGE_SAMPLER = 1, SAMPLED_IMAGE = 2,
+    STORAGE_IMAGE = 3, UNIFORM_TEXEL_BUFFER = 4, STORAGE_TEXEL_BUFFER = 5,
+    UNIFORM_BUFFER = 6, STORAGE_BUFFER = 7, UNIFORM_BUFFER_DYNAMIC = 8,
+    STORAGE_BUFFER_DYNAMIC = 9, INPUT_ATTACHMENT = 10
+  AttachmentLoadOp* {.size: sizeof(cint).} = enum
+    OP_LOAD = 0, OP_CLEAR = 1, OP_DONT_CARE = 2
+  AttachmentStoreOp* {.size: sizeof(cint).} = enum
+    ATTACHMENT_STORE_OP_STORE = 0, ATTACHMENT_STORE_OP_DONT_CARE = 1
+  PipelineBindPoint* {.size: sizeof(cint).} = enum
+    GRAPHICS = 0, COMPUTE = 1
+  CommandBufferLevel* {.size: sizeof(cint).} = enum
+    PRIMARY = 0, SECONDARY = 1
+  IndexType* {.size: sizeof(cint).} = enum
+    INDEX_TYPE_UINT16 = 0, INDEX_TYPE_UINT32 = 1
+  SubpassContents* {.size: sizeof(cint).} = enum
+    SUBPASS_CONTENTS_INLINE = 0, SUBPASS_CONTENTS_SECONDARY_COMMAND_BUFFERS = 1
+  InstanceCreateFlags* = Flags
+  FormatFeatureFlagBits* {.size: sizeof(cint).} = enum
+    SAMPLED_IMAGE_BIT = 0x00000001, STORAGE_IMAGE_BIT = 0x00000002,
+    STORAGE_IMAGE_ATOMIC_BIT = 0x00000004, UNIFORM_TEXEL_BUFFER_BIT = 0x00000008,
+    STORAGE_TEXEL_BUFFER_BIT = 0x00000010,
+    STORAGE_TEXEL_BUFFER_ATOMIC_BIT = 0x00000020, VERTEX_BUFFER_BIT = 0x00000040,
+    FORMAT_FEATURE_COLOR_ATTACHMENT_BIT = 0x00000080,
+    COLOR_ATTACHMENT_BLEND_BIT = 0x00000100,
+    FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT = 0x00000200,
+    BLIT_SRC_BIT = 0x00000400, BLIT_DST_BIT = 0x00000800,
+    SAMPLED_IMAGE_FILTER_LINEAR_BIT = 0x00001000,
+    SAMPLED_IMAGE_FILTER_CUBIC_BIT_IMG = 0x00002000,
+    TRANSFER_SRC_BIT_KHR = 0x00004000, TRANSFER_DST_BIT_KHR = 0x00008000
+  FormatFeatureFlags* = Flags
+  ImageUsageFlagBits* {.size: sizeof(cint).} = enum
+    TRANSFER_SRC_BIT = 0x00000001, TRANSFER_DST_BIT = 0x00000002,
+    SAMPLED_BIT = 0x00000004, STORAGE_BIT = 0x00000008,
+    IMAGE_USAGE_COLOR_ATTACHMENT_BIT = 0x00000010,
+    IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT = 0x00000020,
+    TRANSIENT_ATTACHMENT_BIT = 0x00000040, INPUT_ATTACHMENT_BIT = 0x00000080
+  ImageUsageFlags* = Flags
+  ImageCreateFlagBits* {.size: sizeof(cint).} = enum
+    IMAGE_CREATE_SPARSE_BINDING_BIT = 0x00000001,
+    IMAGE_CREATE_SPARSE_RESIDENCY_BIT = 0x00000002,
+    IMAGE_CREATE_SPARSE_ALIASED_BIT = 0x00000004,
+    IMAGE_CREATE_MUTABLE_FORMAT_BIT = 0x00000008,
+    IMAGE_CREATE_CUBE_COMPATIBLE_BIT = 0x00000010,
+    IMAGE_CREATE_2D_ARRAY_COMPATIBLE_BIT_KHR = 0x00000020,
+    IMAGE_CREATE_BIND_SFR_BIT_KHX = 0x00000040
+  ImageCreateFlags* = Flags
+  SampleCountFlagBits* {.size: sizeof(cint).} = enum
+    SAMPLE_COUNT_1_BIT = 0x00000001, SAMPLE_COUNT_2_BIT = 0x00000002,
+    SAMPLE_COUNT_4_BIT = 0x00000004, SAMPLE_COUNT_8_BIT = 0x00000008,
+    SAMPLE_COUNT_16_BIT = 0x00000010, SAMPLE_COUNT_32_BIT = 0x00000020,
+    SAMPLE_COUNT_64_BIT = 0x00000040
+  SampleCountFlags* = Flags
+  QueueFlagBits* {.size: sizeof(cint).} = enum
+    QUEUE_GRAPHICS_BIT = 0x00000001, QUEUE_COMPUTE_BIT = 0x00000002,
+    QUEUE_TRANSFER_BIT = 0x00000004, QUEUE_SPARSE_BINDING_BIT = 0x00000008
+  QueueFlags* = Flags
+  MemoryPropertyFlagBits* {.size: sizeof(cint).} = enum
+    MEMORY_PROPERTY_DEVICE_LOCAL_BIT = 0x00000001,
+    MEMORY_PROPERTY_HOST_VISIBLE_BIT = 0x00000002,
+    MEMORY_PROPERTY_HOST_COHERENT_BIT = 0x00000004,
+    MEMORY_PROPERTY_HOST_CACHED_BIT = 0x00000008,
+    MEMORY_PROPERTY_LAZILY_ALLOCATED_BIT = 0x00000010
+  MemoryPropertyFlags* = Flags
+  MemoryHeapFlagBits* {.size: sizeof(cint).} = enum
+    MEMORY_HEAP_DEVICE_LOCAL_BIT = 0x00000001,
+    MEMORY_HEAP_MULTI_INSTANCE_BIT_KHX = 0x00000002
+  MemoryHeapFlags* = Flags
+  DeviceCreateFlags* = Flags
+  DeviceQueueCreateFlags* = Flags
+  PipelineStageFlagBits* {.size: sizeof(cint).} = enum
+    TOP_OF_PIPE_BIT = 0x00000001, DRAW_INDIRECT_BIT = 0x00000002,
+    VERTEX_INPUT_BIT = 0x00000004, VERTEX_SHADER_BIT = 0x00000008,
+    TESSELLATION_CONTROL_SHADER_BIT = 0x00000010,
+    TESSELLATION_EVALUATION_SHADER_BIT = 0x00000020,
+    GEOMETRY_SHADER_BIT = 0x00000040, FRAGMENT_SHADER_BIT = 0x00000080,
+    EARLY_FRAGMENT_TESTS_BIT = 0x00000100, LATE_FRAGMENT_TESTS_BIT = 0x00000200,
+    COLOR_ATTACHMENT_OUTPUT_BIT = 0x00000400, COMPUTE_SHADER_BIT = 0x00000800,
+    TRANSFER_BIT = 0x00001000, BOTTOM_OF_PIPE_BIT = 0x00002000, HOST_BIT = 0x00004000,
+    ALL_GRAPHICS_BIT = 0x00008000, ALL_COMMANDS_BIT = 0x00010000,
+    COMMAND_PROCESS_BIT_NVX = 0x00020000
+  PipelineStageFlags* = Flags
+  MemoryMapFlags* = Flags
+  ImageAspectFlagBits* {.size: sizeof(cint).} = enum
+    COLOR_BIT = 0x00000001, DEPTH_BIT = 0x00000002, STENCIL_BIT = 0x00000004,
+    METADATA_BIT = 0x00000008
+  ImageAspectFlags* = Flags
+  SparseImageFormatFlagBits* {.size: sizeof(cint).} = enum
+    SINGLE_MIPTAIL_BIT = 0x00000001, ALIGNED_MIP_SIZE_BIT = 0x00000002,
+    NONSTANDARD_BLOCK_SIZE_BIT = 0x00000004
+  SparseImageFormatFlags* = Flags
+  SparseMemoryBindFlagBits* {.size: sizeof(cint).} = enum
+    SPARSE_MEMORY_BIND_METADATA_BIT = 0x00000001
+  SparseMemoryBindFlags* = Flags
+  FenceCreateFlagBits* {.size: sizeof(cint).} = enum
+    FENCE_CREATE_SIGNALED_BIT = 0x00000001
+  FenceCreateFlags* = Flags
+  SemaphoreCreateFlags* = Flags
+  EventCreateFlags* = Flags
+  QueryPoolCreateFlags* = Flags
+  QueryPipelineStatisticFlagBits* {.size: sizeof(cint).} = enum
+    INPUT_ASSEMBLY_VERTICES_BIT = 0x00000001,
+    INPUT_ASSEMBLY_PRIMITIVES_BIT = 0x00000002,
+    VERTEX_SHADER_INVOCATIONS_BIT = 0x00000004,
+    GEOMETRY_SHADER_INVOCATIONS_BIT = 0x00000008,
+    GEOMETRY_SHADER_PRIMITIVES_BIT = 0x00000010,
+    CLIPPING_INVOCATIONS_BIT = 0x00000020, CLIPPING_PRIMITIVES_BIT = 0x00000040,
+    FRAGMENT_SHADER_INVOCATIONS_BIT = 0x00000080,
+    TESSELLATION_CONTROL_SHADER_PATCHES_BIT = 0x00000100,
+    TESSELLATION_EVALUATION_SHADER_INVOCATIONS_BIT = 0x00000200,
+    COMPUTE_SHADER_INVOCATIONS_BIT = 0x00000400
+  QueryPipelineStatisticFlags* = Flags
+  QueryResultFlagBits* {.size: sizeof(cint).} = enum
+    QUERY_RESULT_64_BIT = 0x00000001, QUERY_RESULT_WAIT_BIT = 0x00000002,
+    QUERY_RESULT_WITH_AVAILABILITY_BIT = 0x00000004,
+    QUERY_RESULT_PARTIAL_BIT = 0x00000008
+  QueryResultFlags* = Flags
+  BufferCreateFlagBits* {.size: sizeof(cint).} = enum
+    BUFFER_CREATE_SPARSE_BINDING_BIT = 0x00000001,
+    BUFFER_CREATE_SPARSE_RESIDENCY_BIT = 0x00000002,
+    BUFFER_CREATE_SPARSE_ALIASED_BIT = 0x00000004
+  BufferCreateFlags* = Flags
+  BufferUsageFlagBits* {.size: sizeof(cint).} = enum
+    BUFFER_USAGE_TRANSFER_SRC_BIT = 0x00000001,
+    BUFFER_USAGE_TRANSFER_DST_BIT = 0x00000002,
+    BUFFER_USAGE_UNIFORM_TEXEL_BUFFER_BIT = 0x00000004,
+    BUFFER_USAGE_STORAGE_TEXEL_BUFFER_BIT = 0x00000008,
+    BUFFER_USAGE_UNIFORM_BUFFER_BIT = 0x00000010,
+    BUFFER_USAGE_STORAGE_BUFFER_BIT = 0x00000020,
+    BUFFER_USAGE_INDEX_BUFFER_BIT = 0x00000040,
+    BUFFER_USAGE_VERTEX_BUFFER_BIT = 0x00000080,
+    BUFFER_USAGE_INDIRECT_BUFFER_BIT = 0x00000100
+  BufferUsageFlags* = Flags
+  BufferViewCreateFlags* = Flags
+  ImageViewCreateFlags* = Flags
+  ShaderModuleCreateFlags* = Flags
+  PipelineCacheCreateFlags* = Flags
+  PipelineCreateFlagBits* {.size: sizeof(cint).} = enum
+    DISABLE_OPTIMIZATION_BIT = 0x00000001, ALLOW_DERIVATIVES_BIT = 0x00000002,
+    DERIVATIVE_BIT = 0x00000004, VIEW_INDEX_FROM_DEVICE_INDEX_BIT_KHX = 0x00000008,
+    DISPATCH_BASE_KHX = 0x00000010
+  PipelineCreateFlags* = Flags
+  PipelineShaderStageCreateFlags* = Flags
+  ShaderStageFlagBits* {.size: sizeof(cint).} = enum
+    VERTEX_BIT = 0x00000001, TESSELLATION_CONTROL_BIT = 0x00000002,
+    TESSELLATION_EVALUATION_BIT = 0x00000004, GEOMETRY_BIT = 0x00000008,
+    FRAGMENT_BIT = 0x00000010, ALL_GRAPHICS = 0x0000001F, COMPUTE_BIT = 0x00000020,
+    ALL = 0x7FFFFFFF
+  PipelineVertexInputStateCreateFlags* = Flags
+  PipelineInputAssemblyStateCreateFlags* = Flags
+  PipelineTessellationStateCreateFlags* = Flags
+  PipelineViewportStateCreateFlags* = Flags
+  PipelineRasterizationStateCreateFlags* = Flags
+  CullModeFlagBits* {.size: sizeof(cint).} = enum
+    CULL_MODE_NONE = 0, CULL_MODE_FRONT_BIT = 0x00000001,
+    CULL_MODE_BACK_BIT = 0x00000002, CULL_MODE_FRONT_AND_BACK = 0x00000003
+  CullModeFlags* = Flags
+  PipelineMultisampleStateCreateFlags* = Flags
+  PipelineDepthStencilStateCreateFlags* = Flags
+  PipelineColorBlendStateCreateFlags* = Flags
+  ColorComponentFlagBits* {.size: sizeof(cint).} = enum
+    R_BIT = 0x00000001, G_BIT = 0x00000002, B_BIT = 0x00000004, A_BIT = 0x00000008
+  ColorComponentFlags* = Flags
+  PipelineDynamicStateCreateFlags* = Flags
+  PipelineLayoutCreateFlags* = Flags
+  ShaderStageFlags* = Flags
+  SamplerCreateFlags* = Flags
+  DescriptorSetLayoutCreateFlagBits* {.size: sizeof(cint).} = enum
+    PUSH_DESCRIPTOR_BIT_KHR = 0x00000001
+  DescriptorSetLayoutCreateFlags* = Flags
+  DescriptorPoolCreateFlagBits* {.size: sizeof(cint).} = enum
+    FREE_DESCRIPTOR_SET_BIT = 0x00000001
+  DescriptorPoolCreateFlags* = Flags
+  DescriptorPoolResetFlags* = Flags
+  FramebufferCreateFlags* = Flags
+  RenderPassCreateFlags* = Flags
+  AttachmentDescriptionFlagBits* {.size: sizeof(cint).} = enum
+    ATTACHMENT_DESCRIPTION_MAY_ALIAS_BIT = 0x00000001
+  AttachmentDescriptionFlags* = Flags
+  SubpassDescriptionFlagBits* {.size: sizeof(cint).} = enum
+    PER_VIEW_ATTRIBUTES_BIT_NVX = 0x00000001,
+    PER_VIEW_POSITION_X_ONLY_BIT_NVX = 0x00000002
+  SubpassDescriptionFlags* = Flags
+  AccessFlagBits* {.size: sizeof(cint).} = enum
+    INDIRECT_COMMAND_READ_BIT = 0x00000001, INDEX_READ_BIT = 0x00000002,
+    VERTEX_ATTRIBUTE_READ_BIT = 0x00000004, UNIFORM_READ_BIT = 0x00000008,
+    INPUT_ATTACHMENT_READ_BIT = 0x00000010, SHADER_READ_BIT = 0x00000020,
+    SHADER_WRITE_BIT = 0x00000040, COLOR_ATTACHMENT_READ_BIT = 0x00000080,
+    COLOR_ATTACHMENT_WRITE_BIT = 0x00000100,
+    DEPTH_STENCIL_ATTACHMENT_READ_BIT = 0x00000200,
+    DEPTH_STENCIL_ATTACHMENT_WRITE_BIT = 0x00000400,
+    TRANSFER_READ_BIT = 0x00000800, TRANSFER_WRITE_BIT = 0x00001000,
+    HOST_READ_BIT = 0x00002000, HOST_WRITE_BIT = 0x00004000,
+    MEMORY_READ_BIT = 0x00008000, MEMORY_WRITE_BIT = 0x00010000,
+    COMMAND_PROCESS_READ_BIT_NVX = 0x00020000,
+    COMMAND_PROCESS_WRITE_BIT_NVX = 0x00040000
+  AccessFlags* = Flags
+  DependencyFlagBits* {.size: sizeof(cint).} = enum
+    BY_REGION_BIT = 0x00000001, VIEW_LOCAL_BIT_KHX = 0x00000002,
+    DEVICE_GROUP_BIT_KHX = 0x00000004
+  DependencyFlags* = Flags
+  CommandPoolCreateFlagBits* {.size: sizeof(cint).} = enum
+    TRANSIENT_BIT = 0x00000001, RESET_COMMAND_BUFFER_BIT = 0x00000002
+  CommandPoolCreateFlags* = Flags
+  CommandPoolResetFlagBits* {.size: sizeof(cint).} = enum
+    RELEASE_RESOURCES_BIT = 0x00000001
+  CommandPoolResetFlags* = Flags
+  CommandBufferUsageFlagBits* {.size: sizeof(cint).} = enum
+    ONE_TIME_SUBMIT_BIT = 0x00000001, RENDER_PASS_CONTINUE_BIT = 0x00000002,
+    SIMULTANEOUS_USE_BIT = 0x00000004
+  CommandBufferUsageFlags* = Flags
+  QueryControlFlagBits* {.size: sizeof(cint).} = enum
+    QUERY_CONTROL_PRECISE_BIT = 0x00000001
+  QueryControlFlags* = Flags
+  CommandBufferResetFlagBits* {.size: sizeof(cint).} = enum
+    COMMAND_BUFFER_RESET_RELEASE_RESOURCES_BIT = 0x00000001
+  CommandBufferResetFlags* = Flags
+  StencilFaceFlagBits* {.size: sizeof(cint).} = enum
+    STENCIL_FACE_FRONT_BIT = 0x00000001, STENCIL_FACE_BACK_BIT = 0x00000002,
+    STENCIL_FRONT_AND_BACK = 0x00000003
+  StencilFaceFlags* = Flags
+  AllocationFunction* = proc (pUserData: pointer; size: csize; alignment: csize;
+                           allocationScope: SystemAllocationScope): pointer {.cdecl.}
+  ReallocationFunction* = proc (pUserData: pointer; pOriginal: pointer; size: csize;
+                             alignment: csize;
+                             allocationScope: SystemAllocationScope): pointer {.
+      cdecl.}
+  FreeFunction* = proc (pUserData: pointer; pMemory: pointer) {.cdecl.}
+  InternalAllocationNotification* = proc (pUserData: pointer; size: csize;
+                                       allocationType: InternalAllocationType;
+                                       allocationScope: SystemAllocationScope) {.
+      cdecl.}
+  InternalFreeNotification* = proc (pUserData: pointer; size: csize;
+                                 allocationType: InternalAllocationType;
+                                 allocationScope: SystemAllocationScope) {.cdecl.}
+  VoidFunction* = proc () {.cdecl.}
+  ApplicationInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    pApplicationName*: cstring
+    applicationVersion*: uint32
+    pEngineName*: cstring
+    engineVersion*: uint32
+    apiVersion*: uint32
+
+  InstanceCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: InstanceCreateFlags
+    pApplicationInfo*: ptr ApplicationInfo
+    enabledLayerCount*: uint32
+    ppEnabledLayerNames*: cstringArray
+    enabledExtensionCount*: uint32
+    ppEnabledExtensionNames*: cstringArray
+
+  AllocationCallbacks* = object
+    pUserData*: pointer
+    pfnAllocation*: AllocationFunction
+    pfnReallocation*: ReallocationFunction
+    pfnFree*: FreeFunction
+    pfnInternalAllocation*: InternalAllocationNotification
+    pfnInternalFree*: InternalFreeNotification
+
+  PhysicalDeviceFeatures* = object
+    robustBufferAccess*: Bool32
+    fullDrawIndexUint32*: Bool32
+    imageCubeArray*: Bool32
+    independentBlend*: Bool32
+    geometryShader*: Bool32
+    tessellationShader*: Bool32
+    sampleRateShading*: Bool32
+    dualSrcBlend*: Bool32
+    logicOp*: Bool32
+    multiDrawIndirect*: Bool32
+    drawIndirectFirstInstance*: Bool32
+    depthClamp*: Bool32
+    depthBiasClamp*: Bool32
+    fillModeNonSolid*: Bool32
+    depthBounds*: Bool32
+    wideLines*: Bool32
+    largePoints*: Bool32
+    alphaToOne*: Bool32
+    multiViewport*: Bool32
+    samplerAnisotropy*: Bool32
+    textureCompressionETC2*: Bool32
+    textureCompressionASTC_LDR*: Bool32
+    textureCompressionBC*: Bool32
+    occlusionQueryPrecise*: Bool32
+    pipelineStatisticsQuery*: Bool32
+    vertexPipelineStoresAndAtomics*: Bool32
+    fragmentStoresAndAtomics*: Bool32
+    shaderTessellationAndGeometryPointSize*: Bool32
+    shaderImageGatherExtended*: Bool32
+    shaderStorageImageExtendedFormats*: Bool32
+    shaderStorageImageMultisample*: Bool32
+    shaderStorageImageReadWithoutFormat*: Bool32
+    shaderStorageImageWriteWithoutFormat*: Bool32
+    shaderUniformBufferArrayDynamicIndexing*: Bool32
+    shaderSampledImageArrayDynamicIndexing*: Bool32
+    shaderStorageBufferArrayDynamicIndexing*: Bool32
+    shaderStorageImageArrayDynamicIndexing*: Bool32
+    shaderClipDistance*: Bool32
+    shaderCullDistance*: Bool32
+    shaderFloat64*: Bool32
+    shaderInt64*: Bool32
+    shaderInt16*: Bool32
+    shaderResourceResidency*: Bool32
+    shaderResourceMinLod*: Bool32
+    sparseBinding*: Bool32
+    sparseResidencyBuffer*: Bool32
+    sparseResidencyImage2D*: Bool32
+    sparseResidencyImage3D*: Bool32
+    sparseResidency2Samples*: Bool32
+    sparseResidency4Samples*: Bool32
+    sparseResidency8Samples*: Bool32
+    sparseResidency16Samples*: Bool32
+    sparseResidencyAliased*: Bool32
+    variableMultisampleRate*: Bool32
+    inheritedQueries*: Bool32
+
+  FormatProperties* = object
+    linearTilingFeatures*: FormatFeatureFlags
+    optimalTilingFeatures*: FormatFeatureFlags
+    bufferFeatures*: FormatFeatureFlags
+
+  Extent3D* = object
+    width*: uint32
+    height*: uint32
+    depth*: uint32
+
+  ImageFormatProperties* = object
+    maxExtent*: Extent3D
+    maxMipLevels*: uint32
+    maxArrayLayers*: uint32
+    sampleCounts*: SampleCountFlags
+    maxResourceSize*: DeviceSize
+
+  PhysicalDeviceLimits* = object
+    maxImageDimension1D*: uint32
+    maxImageDimension2D*: uint32
+    maxImageDimension3D*: uint32
+    maxImageDimensionCube*: uint32
+    maxImageArrayLayers*: uint32
+    maxTexelBufferElements*: uint32
+    maxUniformBufferRange*: uint32
+    maxStorageBufferRange*: uint32
+    maxPushConstantsSize*: uint32
+    maxMemoryAllocationCount*: uint32
+    maxSamplerAllocationCount*: uint32
+    bufferImageGranularity*: DeviceSize
+    sparseAddressSpaceSize*: DeviceSize
+    maxBoundDescriptorSets*: uint32
+    maxPerStageDescriptorSamplers*: uint32
+    maxPerStageDescriptorUniformBuffers*: uint32
+    maxPerStageDescriptorStorageBuffers*: uint32
+    maxPerStageDescriptorSampledImages*: uint32
+    maxPerStageDescriptorStorageImages*: uint32
+    maxPerStageDescriptorInputAttachments*: uint32
+    maxPerStageResources*: uint32
+    maxDescriptorSetSamplers*: uint32
+    maxDescriptorSetUniformBuffers*: uint32
+    maxDescriptorSetUniformBuffersDynamic*: uint32
+    maxDescriptorSetStorageBuffers*: uint32
+    maxDescriptorSetStorageBuffersDynamic*: uint32
+    maxDescriptorSetSampledImages*: uint32
+    maxDescriptorSetStorageImages*: uint32
+    maxDescriptorSetInputAttachments*: uint32
+    maxVertexInputAttributes*: uint32
+    maxVertexInputBindings*: uint32
+    maxVertexInputAttributeOffset*: uint32
+    maxVertexInputBindingStride*: uint32
+    maxVertexOutputComponents*: uint32
+    maxTessellationGenerationLevel*: uint32
+    maxTessellationPatchSize*: uint32
+    maxTessellationControlPerVertexInputComponents*: uint32
+    maxTessellationControlPerVertexOutputComponents*: uint32
+    maxTessellationControlPerPatchOutputComponents*: uint32
+    maxTessellationControlTotalOutputComponents*: uint32
+    maxTessellationEvaluationInputComponents*: uint32
+    maxTessellationEvaluationOutputComponents*: uint32
+    maxGeometryShaderInvocations*: uint32
+    maxGeometryInputComponents*: uint32
+    maxGeometryOutputComponents*: uint32
+    maxGeometryOutputVertices*: uint32
+    maxGeometryTotalOutputComponents*: uint32
+    maxFragmentInputComponents*: uint32
+    maxFragmentOutputAttachments*: uint32
+    maxFragmentDualSrcAttachments*: uint32
+    maxFragmentCombinedOutputResources*: uint32
+    maxComputeSharedMemorySize*: uint32
+    maxComputeWorkGroupCount*: array[3, uint32]
+    maxComputeWorkGroupInvocations*: uint32
+    maxComputeWorkGroupSize*: array[3, uint32]
+    subPixelPrecisionBits*: uint32
+    subTexelPrecisionBits*: uint32
+    mipmapPrecisionBits*: uint32
+    maxDrawIndexedIndexValue*: uint32
+    maxDrawIndirectCount*: uint32
+    maxSamplerLodBias*: cfloat
+    maxSamplerAnisotropy*: cfloat
+    maxViewports*: uint32
+    maxViewportDimensions*: array[2, uint32]
+    viewportBoundsRange*: array[2, cfloat]
+    viewportSubPixelBits*: uint32
+    minMemoryMapAlignment*: csize
+    minTexelBufferOffsetAlignment*: DeviceSize
+    minUniformBufferOffsetAlignment*: DeviceSize
+    minStorageBufferOffsetAlignment*: DeviceSize
+    minTexelOffset*: int32
+    maxTexelOffset*: uint32
+    minTexelGatherOffset*: int32
+    maxTexelGatherOffset*: uint32
+    minInterpolationOffset*: cfloat
+    maxInterpolationOffset*: cfloat
+    subPixelInterpolationOffsetBits*: uint32
+    maxFramebufferWidth*: uint32
+    maxFramebufferHeight*: uint32
+    maxFramebufferLayers*: uint32
+    framebufferColorSampleCounts*: SampleCountFlags
+    framebufferDepthSampleCounts*: SampleCountFlags
+    framebufferStencilSampleCounts*: SampleCountFlags
+    framebufferNoAttachmentsSampleCounts*: SampleCountFlags
+    maxColorAttachments*: uint32
+    sampledImageColorSampleCounts*: SampleCountFlags
+    sampledImageIntegerSampleCounts*: SampleCountFlags
+    sampledImageDepthSampleCounts*: SampleCountFlags
+    sampledImageStencilSampleCounts*: SampleCountFlags
+    storageImageSampleCounts*: SampleCountFlags
+    maxSampleMaskWords*: uint32
+    timestampComputeAndGraphics*: Bool32
+    timestampPeriod*: cfloat
+    maxClipDistances*: uint32
+    maxCullDistances*: uint32
+    maxCombinedClipAndCullDistances*: uint32
+    discreteQueuePriorities*: uint32
+    pointSizeRange*: array[2, cfloat]
+    lineWidthRange*: array[2, cfloat]
+    pointSizeGranularity*: cfloat
+    lineWidthGranularity*: cfloat
+    strictLines*: Bool32
+    standardSampleLocations*: Bool32
+    optimalBufferCopyOffsetAlignment*: DeviceSize
+    optimalBufferCopyRowPitchAlignment*: DeviceSize
+    nonCoherentAtomSize*: DeviceSize
+
+  PhysicalDeviceSparseProperties* = object
+    residencyStandard2DBlockShape*: Bool32
+    residencyStandard2DMultisampleBlockShape*: Bool32
+    residencyStandard3DBlockShape*: Bool32
+    residencyAlignedMipSize*: Bool32
+    residencyNonResidentStrict*: Bool32
+
+  PhysicalDeviceProperties* = object
+    apiVersion*: uint32
+    driverVersion*: uint32
+    vendorID*: uint32
+    deviceID*: uint32
+    deviceType*: PhysicalDeviceType
+    deviceName*: array[MAX_PHYSICAL_DEVICE_NAME_SIZE, char]
+    pipelineCacheUUID*: array[UUID_SIZE, uint8]
+    limits*: PhysicalDeviceLimits
+    sparseProperties*: PhysicalDeviceSparseProperties
+
+  QueueFamilyProperties* = object
+    queueFlags*: QueueFlags
+    queueCount*: uint32
+    timestampValidBits*: uint32
+    minImageTransferGranularity*: Extent3D
+
+  MemoryType* = object
+    propertyFlags*: MemoryPropertyFlags
+    heapIndex*: uint32
+
+  MemoryHeap* = object
+    size*: DeviceSize
+    flags*: MemoryHeapFlags
+
+  PhysicalDeviceMemoryProperties* = object
+    memoryTypeCount*: uint32
+    memoryTypes*: array[MAX_MEMORY_TYPES, MemoryType]
+    memoryHeapCount*: uint32
+    memoryHeaps*: array[MAX_MEMORY_HEAPS, MemoryHeap]
+
+  DeviceQueueCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: DeviceQueueCreateFlags
+    queueFamilyIndex*: uint32
+    queueCount*: uint32
+    pQueuePriorities*: ptr cfloat
+
+  DeviceCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: DeviceCreateFlags
+    queueCreateInfoCount*: uint32
+    pQueueCreateInfos*: ptr DeviceQueueCreateInfo
+    enabledLayerCount*: uint32
+    ppEnabledLayerNames*: cstringArray
+    enabledExtensionCount*: uint32
+    ppEnabledExtensionNames*: cstringArray
+    pEnabledFeatures*: ptr PhysicalDeviceFeatures
+
+  ExtensionProperties* = object
+    extensionName*: array[MAX_EXTENSION_NAME_SIZE, char]
+    specVersion*: uint32
+
+  LayerProperties* = object
+    layerName*: array[MAX_EXTENSION_NAME_SIZE, char]
+    specVersion*: uint32
+    implementationVersion*: uint32
+    description*: array[MAX_DESCRIPTION_SIZE, char]
+
+  SubmitInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    waitSemaphoreCount*: uint32
+    pWaitSemaphores*: ptr Semaphore
+    pWaitDstStageMask*: ptr PipelineStageFlags
+    commandBufferCount*: uint32
+    pCommandBuffers*: ptr CommandBuffer
+    signalSemaphoreCount*: uint32
+    pSignalSemaphores*: ptr Semaphore
+
+  MemoryAllocateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    allocationSize*: DeviceSize
+    memoryTypeIndex*: uint32
+
+  MappedMemoryRange* = object
+    sType*: StructureType
+    pNext*: pointer
+    memory*: DeviceMemory
+    offset*: DeviceSize
+    size*: DeviceSize
+
+  MemoryRequirements* = object
+    size*: DeviceSize
+    alignment*: DeviceSize
+    memoryTypeBits*: uint32
+
+  SparseImageFormatProperties* = object
+    aspectMask*: ImageAspectFlags
+    imageGranularity*: Extent3D
+    flags*: SparseImageFormatFlags
+
+  SparseImageMemoryRequirements* = object
+    formatProperties*: SparseImageFormatProperties
+    imageMipTailFirstLod*: uint32
+    imageMipTailSize*: DeviceSize
+    imageMipTailOffset*: DeviceSize
+    imageMipTailStride*: DeviceSize
+
+  SparseMemoryBind* = object
+    resourceOffset*: DeviceSize
+    size*: DeviceSize
+    memory*: DeviceMemory
+    memoryOffset*: DeviceSize
+    flags*: SparseMemoryBindFlags
+
+  SparseBufferMemoryBindInfo* = object
+    buffer*: Buffer
+    bindCount*: uint32
+    pBinds*: ptr SparseMemoryBind
+
+  SparseImageOpaqueMemoryBindInfo* = object
+    image*: Image
+    bindCount*: uint32
+    pBinds*: ptr SparseMemoryBind
+
+  ImageSubresource* = object
+    aspectMask*: ImageAspectFlags
+    mipLevel*: uint32
+    arrayLayer*: uint32
+
+  Offset3D* = object
+    x*: int32
+    y*: int32
+    z*: int32
+
+  SparseImageMemoryBind* = object
+    subresource*: ImageSubresource
+    offset*: Offset3D
+    extent*: Extent3D
+    memory*: DeviceMemory
+    memoryOffset*: DeviceSize
+    flags*: SparseMemoryBindFlags
+
+  SparseImageMemoryBindInfo* = object
+    image*: Image
+    bindCount*: uint32
+    pBinds*: ptr SparseImageMemoryBind
+
+  BindSparseInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    waitSemaphoreCount*: uint32
+    pWaitSemaphores*: ptr Semaphore
+    bufferBindCount*: uint32
+    pBufferBinds*: ptr SparseBufferMemoryBindInfo
+    imageOpaqueBindCount*: uint32
+    pImageOpaqueBinds*: ptr SparseImageOpaqueMemoryBindInfo
+    imageBindCount*: uint32
+    pImageBinds*: ptr SparseImageMemoryBindInfo
+    signalSemaphoreCount*: uint32
+    pSignalSemaphores*: ptr Semaphore
+
+  FenceCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: FenceCreateFlags
+
+  SemaphoreCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: SemaphoreCreateFlags
+
+  EventCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: EventCreateFlags
+
+  QueryPoolCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: QueryPoolCreateFlags
+    queryType*: QueryType
+    queryCount*: uint32
+    pipelineStatistics*: QueryPipelineStatisticFlags
+
+  BufferCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: BufferCreateFlags
+    size*: DeviceSize
+    usage*: BufferUsageFlags
+    sharingMode*: SharingMode
+    queueFamilyIndexCount*: uint32
+    pQueueFamilyIndices*: ptr uint32
+
+  BufferViewCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: BufferViewCreateFlags
+    buffer*: Buffer
+    format*: Format
+    offset*: DeviceSize
+    range*: DeviceSize
+
+  ImageCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: ImageCreateFlags
+    imageType*: ImageType
+    format*: Format
+    extent*: Extent3D
+    mipLevels*: uint32
+    arrayLayers*: uint32
+    samples*: SampleCountFlagBits
+    tiling*: ImageTiling
+    usage*: ImageUsageFlags
+    sharingMode*: SharingMode
+    queueFamilyIndexCount*: uint32
+    pQueueFamilyIndices*: ptr uint32
+    initialLayout*: ImageLayout
+
+  SubresourceLayout* = object
+    offset*: DeviceSize
+    size*: DeviceSize
+    rowPitch*: DeviceSize
+    arrayPitch*: DeviceSize
+    depthPitch*: DeviceSize
+
+  ComponentMapping* = object
+    r*: ComponentSwizzle
+    g*: ComponentSwizzle
+    b*: ComponentSwizzle
+    a*: ComponentSwizzle
+
+  ImageSubresourceRange* = object
+    aspectMask*: ImageAspectFlags
+    baseMipLevel*: uint32
+    levelCount*: uint32
+    baseArrayLayer*: uint32
+    layerCount*: uint32
+
+  ImageViewCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: ImageViewCreateFlags
+    image*: Image
+    viewType*: ImageViewType
+    format*: Format
+    components*: ComponentMapping
+    subresourceRange*: ImageSubresourceRange
+
+  ShaderModuleCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: ShaderModuleCreateFlags
+    codeSize*: csize
+    pCode*: ptr uint32
+
+  PipelineCacheCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineCacheCreateFlags
+    initialDataSize*: csize
+    pInitialData*: pointer
+
+  SpecializationMapEntry* = object
+    constantID*: uint32
+    offset*: uint32
+    size*: csize
+
+  SpecializationInfo* = object
+    mapEntryCount*: uint32
+    pMapEntries*: ptr SpecializationMapEntry
+    dataSize*: csize
+    pData*: pointer
+
+  PipelineShaderStageCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineShaderStageCreateFlags
+    stage*: ShaderStageFlagBits
+    module*: ShaderModule
+    pName*: cstring
+    pSpecializationInfo*: ptr SpecializationInfo
+
+  VertexInputBindingDescription* = object
+    binding*: uint32
+    stride*: uint32
+    inputRate*: VertexInputRate
+
+  VertexInputAttributeDescription* = object
+    location*: uint32
+    binding*: uint32
+    format*: Format
+    offset*: uint32
+
+  PipelineVertexInputStateCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineVertexInputStateCreateFlags
+    vertexBindingDescriptionCount*: uint32
+    pVertexBindingDescriptions*: ptr VertexInputBindingDescription
+    vertexAttributeDescriptionCount*: uint32
+    pVertexAttributeDescriptions*: ptr VertexInputAttributeDescription
+
+  PipelineInputAssemblyStateCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineInputAssemblyStateCreateFlags
+    topology*: PrimitiveTopology
+    primitiveRestartEnable*: Bool32
+
+  PipelineTessellationStateCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineTessellationStateCreateFlags
+    patchControlPoints*: uint32
+
+  Viewport* = object
+    x*: cfloat
+    y*: cfloat
+    width*: cfloat
+    height*: cfloat
+    minDepth*: cfloat
+    maxDepth*: cfloat
+
+  Offset2D* = object
+    x*: int32
+    y*: int32
+
+  Extent2D* = object
+    width*: uint32
+    height*: uint32
+
+  Rect2D* = object
+    offset*: Offset2D
+    extent*: Extent2D
+
+  PipelineViewportStateCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineViewportStateCreateFlags
+    viewportCount*: uint32
+    pViewports*: ptr Viewport
+    scissorCount*: uint32
+    pScissors*: ptr Rect2D
+
+  PipelineRasterizationStateCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineRasterizationStateCreateFlags
+    depthClampEnable*: Bool32
+    rasterizerDiscardEnable*: Bool32
+    polygonMode*: PolygonMode
+    cullMode*: CullModeFlags
+    frontFace*: FrontFace
+    depthBiasEnable*: Bool32
+    depthBiasConstantFactor*: cfloat
+    depthBiasClamp*: cfloat
+    depthBiasSlopeFactor*: cfloat
+    lineWidth*: cfloat
+
+  PipelineMultisampleStateCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineMultisampleStateCreateFlags
+    rasterizationSamples*: SampleCountFlagBits
+    sampleShadingEnable*: Bool32
+    minSampleShading*: cfloat
+    pSampleMask*: ptr SampleMask
+    alphaToCoverageEnable*: Bool32
+    alphaToOneEnable*: Bool32
+
+  StencilOpState* = object
+    failOp*: StencilOp
+    passOp*: StencilOp
+    depthFailOp*: StencilOp
+    compareOp*: CompareOp
+    compareMask*: uint32
+    writeMask*: uint32
+    reference*: uint32
+
+  PipelineDepthStencilStateCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineDepthStencilStateCreateFlags
+    depthTestEnable*: Bool32
+    depthWriteEnable*: Bool32
+    depthCompareOp*: CompareOp
+    depthBoundsTestEnable*: Bool32
+    stencilTestEnable*: Bool32
+    front*: StencilOpState
+    back*: StencilOpState
+    minDepthBounds*: cfloat
+    maxDepthBounds*: cfloat
+
+  PipelineColorBlendAttachmentState* = object
+    blendEnable*: Bool32
+    srcColorBlendFactor*: BlendFactor
+    dstColorBlendFactor*: BlendFactor
+    colorBlendOp*: BlendOp
+    srcAlphaBlendFactor*: BlendFactor
+    dstAlphaBlendFactor*: BlendFactor
+    alphaBlendOp*: BlendOp
+    colorWriteMask*: ColorComponentFlags
+
+  PipelineColorBlendStateCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineColorBlendStateCreateFlags
+    logicOpEnable*: Bool32
+    logicOp*: LogicOp
+    attachmentCount*: uint32
+    pAttachments*: ptr PipelineColorBlendAttachmentState
+    blendConstants*: array[4, cfloat]
+
+  PipelineDynamicStateCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineDynamicStateCreateFlags
+    dynamicStateCount*: uint32
+    pDynamicStates*: ptr DynamicState
+
+  GraphicsPipelineCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineCreateFlags
+    stageCount*: uint32
+    pStages*: ptr PipelineShaderStageCreateInfo
+    pVertexInputState*: ptr PipelineVertexInputStateCreateInfo
+    pInputAssemblyState*: ptr PipelineInputAssemblyStateCreateInfo
+    pTessellationState*: ptr PipelineTessellationStateCreateInfo
+    pViewportState*: ptr PipelineViewportStateCreateInfo
+    pRasterizationState*: ptr PipelineRasterizationStateCreateInfo
+    pMultisampleState*: ptr PipelineMultisampleStateCreateInfo
+    pDepthStencilState*: ptr PipelineDepthStencilStateCreateInfo
+    pColorBlendState*: ptr PipelineColorBlendStateCreateInfo
+    pDynamicState*: ptr PipelineDynamicStateCreateInfo
+    layout*: PipelineLayout
+    renderPass*: RenderPass
+    subpass*: uint32
+    basePipelineHandle*: Pipeline
+    basePipelineIndex*: int32
+
+  ComputePipelineCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineCreateFlags
+    stage*: PipelineShaderStageCreateInfo
+    layout*: PipelineLayout
+    basePipelineHandle*: Pipeline
+    basePipelineIndex*: int32
+
+  PushConstantRange* = object
+    stageFlags*: ShaderStageFlags
+    offset*: uint32
+    size*: uint32
+
+  PipelineLayoutCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineLayoutCreateFlags
+    setLayoutCount*: uint32
+    pSetLayouts*: ptr DescriptorSetLayout
+    pushConstantRangeCount*: uint32
+    pPushConstantRanges*: ptr PushConstantRange
+
+  SamplerCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: SamplerCreateFlags
+    magFilter*: Filter
+    minFilter*: Filter
+    mipmapMode*: SamplerMipmapMode
+    addressModeU*: SamplerAddressMode
+    addressModeV*: SamplerAddressMode
+    addressModeW*: SamplerAddressMode
+    mipLodBias*: cfloat
+    anisotropyEnable*: Bool32
+    maxAnisotropy*: cfloat
+    compareEnable*: Bool32
+    compareOp*: CompareOp
+    minLod*: cfloat
+    maxLod*: cfloat
+    borderColor*: BorderColor
+    unnormalizedCoordinates*: Bool32
+
+  DescriptorSetLayoutBinding* = object
+    binding*: uint32
+    descriptorType*: DescriptorType
+    descriptorCount*: uint32
+    stageFlags*: ShaderStageFlags
+    pImmutableSamplers*: ptr Sampler
+
+  DescriptorSetLayoutCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: DescriptorSetLayoutCreateFlags
+    bindingCount*: uint32
+    pBindings*: ptr DescriptorSetLayoutBinding
+
+  DescriptorPoolSize* = object
+    `type`*: DescriptorType
+    descriptorCount*: uint32
+
+  DescriptorPoolCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: DescriptorPoolCreateFlags
+    maxSets*: uint32
+    poolSizeCount*: uint32
+    pPoolSizes*: ptr DescriptorPoolSize
+
+  DescriptorSetAllocateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    descriptorPool*: DescriptorPool
+    descriptorSetCount*: uint32
+    pSetLayouts*: ptr DescriptorSetLayout
+
+  DescriptorImageInfo* = object
+    sampler*: Sampler
+    imageView*: ImageView
+    imageLayout*: ImageLayout
+
+  DescriptorBufferInfo* = object
+    buffer*: Buffer
+    offset*: DeviceSize
+    range*: DeviceSize
+
+  WriteDescriptorSet* = object
+    sType*: StructureType
+    pNext*: pointer
+    dstSet*: DescriptorSet
+    dstBinding*: uint32
+    dstArrayElement*: uint32
+    descriptorCount*: uint32
+    descriptorType*: DescriptorType
+    pImageInfo*: ptr DescriptorImageInfo
+    pBufferInfo*: ptr DescriptorBufferInfo
+    pTexelBufferView*: ptr BufferView
+
+  CopyDescriptorSet* = object
+    sType*: StructureType
+    pNext*: pointer
+    srcSet*: DescriptorSet
+    srcBinding*: uint32
+    srcArrayElement*: uint32
+    dstSet*: DescriptorSet
+    dstBinding*: uint32
+    dstArrayElement*: uint32
+    descriptorCount*: uint32
+
+  FramebufferCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: FramebufferCreateFlags
+    renderPass*: RenderPass
+    attachmentCount*: uint32
+    pAttachments*: ptr ImageView
+    width*: uint32
+    height*: uint32
+    layers*: uint32
+
+  AttachmentDescription* = object
+    flags*: AttachmentDescriptionFlags
+    format*: Format
+    samples*: SampleCountFlagBits
+    loadOp*: AttachmentLoadOp
+    storeOp*: AttachmentStoreOp
+    stencilLoadOp*: AttachmentLoadOp
+    stencilStoreOp*: AttachmentStoreOp
+    initialLayout*: ImageLayout
+    finalLayout*: ImageLayout
+
+  AttachmentReference* = object
+    attachment*: uint32
+    layout*: ImageLayout
+
+  SubpassDescription* = object
+    flags*: SubpassDescriptionFlags
+    pipelineBindPoint*: PipelineBindPoint
+    inputAttachmentCount*: uint32
+    pInputAttachments*: ptr AttachmentReference
+    colorAttachmentCount*: uint32
+    pColorAttachments*: ptr AttachmentReference
+    pResolveAttachments*: ptr AttachmentReference
+    pDepthStencilAttachment*: ptr AttachmentReference
+    preserveAttachmentCount*: uint32
+    pPreserveAttachments*: ptr uint32
+
+  SubpassDependency* = object
+    srcSubpass*: uint32
+    dstSubpass*: uint32
+    srcStageMask*: PipelineStageFlags
+    dstStageMask*: PipelineStageFlags
+    srcAccessMask*: AccessFlags
+    dstAccessMask*: AccessFlags
+    dependencyFlags*: DependencyFlags
+
+  RenderPassCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: RenderPassCreateFlags
+    attachmentCount*: uint32
+    pAttachments*: ptr AttachmentDescription
+    subpassCount*: uint32
+    pSubpasses*: ptr SubpassDescription
+    dependencyCount*: uint32
+    pDependencies*: ptr SubpassDependency
+
+  CommandPoolCreateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: CommandPoolCreateFlags
+    queueFamilyIndex*: uint32
+
+  CommandBufferAllocateInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    commandPool*: CommandPool
+    level*: CommandBufferLevel
+    commandBufferCount*: uint32
+
+  CommandBufferInheritanceInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    renderPass*: RenderPass
+    subpass*: uint32
+    framebuffer*: Framebuffer
+    occlusionQueryEnable*: Bool32
+    queryFlags*: QueryControlFlags
+    pipelineStatistics*: QueryPipelineStatisticFlags
+
+  CommandBufferBeginInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: CommandBufferUsageFlags
+    pInheritanceInfo*: ptr CommandBufferInheritanceInfo
+
+  BufferCopy* = object
+    srcOffset*: DeviceSize
+    dstOffset*: DeviceSize
+    size*: DeviceSize
+
+  ImageSubresourceLayers* = object
+    aspectMask*: ImageAspectFlags
+    mipLevel*: uint32
+    baseArrayLayer*: uint32
+    layerCount*: uint32
+
+  ImageCopy* = object
+    srcSubresource*: ImageSubresourceLayers
+    srcOffset*: Offset3D
+    dstSubresource*: ImageSubresourceLayers
+    dstOffset*: Offset3D
+    extent*: Extent3D
+
+  ImageBlit* = object
+    srcSubresource*: ImageSubresourceLayers
+    srcOffsets*: array[2, Offset3D]
+    dstSubresource*: ImageSubresourceLayers
+    dstOffsets*: array[2, Offset3D]
+
+  BufferImageCopy* = object
+    bufferOffset*: DeviceSize
+    bufferRowLength*: uint32
+    bufferImageHeight*: uint32
+    imageSubresource*: ImageSubresourceLayers
+    imageOffset*: Offset3D
+    imageExtent*: Extent3D
+
+  ClearColorValue* = object {.union.}
+    float32*: array[4, cfloat]
+    int32*: array[4, int32]
+    uint32*: array[4, uint32]
+
+  ClearDepthStencilValue* = object
+    depth*: cfloat
+    stencil*: uint32
+
+  ClearValue* = object {.union.}
+    color*: ClearColorValue
+    depthStencil*: ClearDepthStencilValue
+
+  ClearAttachment* = object
+    aspectMask*: ImageAspectFlags
+    colorAttachment*: uint32
+    clearValue*: ClearValue
+
+  ClearRect* = object
+    rect*: Rect2D
+    baseArrayLayer*: uint32
+    layerCount*: uint32
+
+  ImageResolve* = object
+    srcSubresource*: ImageSubresourceLayers
+    srcOffset*: Offset3D
+    dstSubresource*: ImageSubresourceLayers
+    dstOffset*: Offset3D
+    extent*: Extent3D
+
+  MemoryBarrier* = object
+    sType*: StructureType
+    pNext*: pointer
+    srcAccessMask*: AccessFlags
+    dstAccessMask*: AccessFlags
+
+  BufferMemoryBarrier* = object
+    sType*: StructureType
+    pNext*: pointer
+    srcAccessMask*: AccessFlags
+    dstAccessMask*: AccessFlags
+    srcQueueFamilyIndex*: uint32
+    dstQueueFamilyIndex*: uint32
+    buffer*: Buffer
+    offset*: DeviceSize
+    size*: DeviceSize
+
+  ImageMemoryBarrier* = object
+    sType*: StructureType
+    pNext*: pointer
+    srcAccessMask*: AccessFlags
+    dstAccessMask*: AccessFlags
+    oldLayout*: ImageLayout
+    newLayout*: ImageLayout
+    srcQueueFamilyIndex*: uint32
+    dstQueueFamilyIndex*: uint32
+    image*: Image
+    subresourceRange*: ImageSubresourceRange
+
+  RenderPassBeginInfo* = object
+    sType*: StructureType
+    pNext*: pointer
+    renderPass*: RenderPass
+    framebuffer*: Framebuffer
+    renderArea*: Rect2D
+    clearValueCount*: uint32
+    pClearValues*: ptr ClearValue
+
+  DispatchIndirectCommand* = object
+    x*: uint32
+    y*: uint32
+    z*: uint32
+
+  DrawIndexedIndirectCommand* = object
+    indexCount*: uint32
+    instanceCount*: uint32
+    firstIndex*: uint32
+    vertexOffset*: int32
+    firstInstance*: uint32
+
+  DrawIndirectCommand* = object
+    vertexCount*: uint32
+    instanceCount*: uint32
+    firstVertex*: uint32
+    firstInstance*: uint32
+
+  CreateInstance* = proc (pCreateInfo: ptr InstanceCreateInfo;
+                       pAllocator: ptr AllocationCallbacks; pInstance: ptr Instance): Result {.
+      cdecl.}
+  DestroyInstance* = proc (instance: Instance; pAllocator: ptr AllocationCallbacks) {.
+      cdecl.}
+  EnumeratePhysicalDevices* = proc (instance: Instance;
+                                 pPhysicalDeviceCount: ptr uint32;
+                                 pPhysicalDevices: ptr PhysicalDevice): Result {.
+      cdecl.}
+  GetPhysicalDeviceFeatures* = proc (physicalDevice: PhysicalDevice;
+                                  pFeatures: ptr PhysicalDeviceFeatures) {.cdecl.}
+  GetPhysicalDeviceFormatProperties* = proc (physicalDevice: PhysicalDevice;
+      format: Format; pFormatProperties: ptr FormatProperties) {.cdecl.}
+  GetPhysicalDeviceImageFormatProperties* = proc (physicalDevice: PhysicalDevice;
+      format: Format; `type`: ImageType; tiling: ImageTiling; usage: ImageUsageFlags;
+      flags: ImageCreateFlags; pImageFormatProperties: ptr ImageFormatProperties): Result {.
+      cdecl.}
+  GetPhysicalDeviceProperties* = proc (physicalDevice: PhysicalDevice;
+                                    pProperties: ptr PhysicalDeviceProperties) {.
+      cdecl.}
+  GetPhysicalDeviceQueueFamilyProperties* = proc (physicalDevice: PhysicalDevice;
+      pQueueFamilyPropertyCount: ptr uint32;
+      pQueueFamilyProperties: ptr QueueFamilyProperties) {.cdecl.}
+  GetPhysicalDeviceMemoryProperties* = proc (physicalDevice: PhysicalDevice;
+      pMemoryProperties: ptr PhysicalDeviceMemoryProperties) {.cdecl.}
+  GetInstanceProcAddr* = proc (instance: Instance; pName: cstring): VoidFunction {.cdecl.}
+  GetDeviceProcAddr* = proc (device: Device; pName: cstring): VoidFunction {.cdecl.}
+  CreateDevice* = proc (physicalDevice: PhysicalDevice;
+                     pCreateInfo: ptr DeviceCreateInfo;
+                     pAllocator: ptr AllocationCallbacks; pDevice: ptr Device): Result {.
+      cdecl.}
+  DestroyDevice* = proc (device: Device; pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  EnumerateInstanceExtensionProperties* = proc (pLayerName: cstring;
+      pPropertyCount: ptr uint32; pProperties: ptr ExtensionProperties): Result {.cdecl.}
+  EnumerateDeviceExtensionProperties* = proc (physicalDevice: PhysicalDevice;
+      pLayerName: cstring; pPropertyCount: ptr uint32;
+      pProperties: ptr ExtensionProperties): Result {.cdecl.}
+  EnumerateInstanceLayerProperties* = proc (pPropertyCount: ptr uint32;
+      pProperties: ptr LayerProperties): Result {.cdecl.}
+  EnumerateDeviceLayerProperties* = proc (physicalDevice: PhysicalDevice;
+                                       pPropertyCount: ptr uint32;
+                                       pProperties: ptr LayerProperties): Result {.
+      cdecl.}
+  GetDeviceQueue* = proc (device: Device; queueFamilyIndex: uint32; queueIndex: uint32;
+                       pQueue: ptr Queue) {.cdecl.}
+  QueueSubmit* = proc (queue: Queue; submitCount: uint32; pSubmits: ptr SubmitInfo;
+                    fence: Fence): Result {.cdecl.}
+  QueueWaitIdle* = proc (queue: Queue): Result {.cdecl.}
+  DeviceWaitIdle* = proc (device: Device): Result {.cdecl.}
+  AllocateMemory* = proc (device: Device; pAllocateInfo: ptr MemoryAllocateInfo;
+                       pAllocator: ptr AllocationCallbacks;
+                       pMemory: ptr DeviceMemory): Result {.cdecl.}
+  FreeMemory* = proc (device: Device; memory: DeviceMemory;
+                   pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  MapMemory* = proc (device: Device; memory: DeviceMemory; offset: DeviceSize;
+                  size: DeviceSize; flags: MemoryMapFlags; ppData: ptr pointer): Result {.
+      cdecl.}
+  UnmapMemory* = proc (device: Device; memory: DeviceMemory) {.cdecl.}
+  FlushMappedMemoryRanges* = proc (device: Device; memoryRangeCount: uint32;
+                                pMemoryRanges: ptr MappedMemoryRange): Result {.
+      cdecl.}
+  InvalidateMappedMemoryRanges* = proc (device: Device; memoryRangeCount: uint32;
+                                     pMemoryRanges: ptr MappedMemoryRange): Result {.
+      cdecl.}
+  GetDeviceMemoryCommitment* = proc (device: Device; memory: DeviceMemory;
+                                  pCommittedMemoryInBytes: ptr DeviceSize) {.cdecl.}
+  BindBufferMemory* = proc (device: Device; buffer: Buffer; memory: DeviceMemory;
+                         memoryOffset: DeviceSize): Result {.cdecl.}
+  BindImageMemory* = proc (device: Device; image: Image; memory: DeviceMemory;
+                        memoryOffset: DeviceSize): Result {.cdecl.}
+  GetBufferMemoryRequirements* = proc (device: Device; buffer: Buffer;
+                                    pMemoryRequirements: ptr MemoryRequirements) {.
+      cdecl.}
+  GetImageMemoryRequirements* = proc (device: Device; image: Image;
+                                   pMemoryRequirements: ptr MemoryRequirements) {.
+      cdecl.}
+  GetImageSparseMemoryRequirements* = proc (device: Device; image: Image;
+      pSparseMemoryRequirementCount: ptr uint32;
+      pSparseMemoryRequirements: ptr SparseImageMemoryRequirements) {.cdecl.}
+  GetPhysicalDeviceSparseImageFormatProperties* = proc (
+      physicalDevice: PhysicalDevice; format: Format; `type`: ImageType;
+      samples: SampleCountFlagBits; usage: ImageUsageFlags; tiling: ImageTiling;
+      pPropertyCount: ptr uint32; pProperties: ptr SparseImageFormatProperties) {.
+      cdecl.}
+  QueueBindSparse* = proc (queue: Queue; bindInfoCount: uint32;
+                        pBindInfo: ptr BindSparseInfo; fence: Fence): Result {.cdecl.}
+  CreateFence* = proc (device: Device; pCreateInfo: ptr FenceCreateInfo;
+                    pAllocator: ptr AllocationCallbacks; pFence: ptr Fence): Result {.
+      cdecl.}
+  DestroyFence* = proc (device: Device; fence: Fence;
+                     pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  ResetFences* = proc (device: Device; fenceCount: uint32; pFences: ptr Fence): Result {.
+      cdecl.}
+  GetFenceStatus* = proc (device: Device; fence: Fence): Result {.cdecl.}
+  WaitForFences* = proc (device: Device; fenceCount: uint32; pFences: ptr Fence;
+                      waitAll: Bool32; timeout: uint64): Result {.cdecl.}
+  CreateSemaphore* = proc (device: Device; pCreateInfo: ptr SemaphoreCreateInfo;
+                        pAllocator: ptr AllocationCallbacks;
+                        pSemaphore: ptr Semaphore): Result {.cdecl.}
+  DestroySemaphore* = proc (device: Device; semaphore: Semaphore;
+                         pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreateEvent* = proc (device: Device; pCreateInfo: ptr EventCreateInfo;
+                    pAllocator: ptr AllocationCallbacks; pEvent: ptr Event): Result {.
+      cdecl.}
+  DestroyEvent* = proc (device: Device; event: Event;
+                     pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  GetEventStatus* = proc (device: Device; event: Event): Result {.cdecl.}
+  SetEvent* = proc (device: Device; event: Event): Result {.cdecl.}
+  ResetEvent* = proc (device: Device; event: Event): Result {.cdecl.}
+  CreateQueryPool* = proc (device: Device; pCreateInfo: ptr QueryPoolCreateInfo;
+                        pAllocator: ptr AllocationCallbacks;
+                        pQueryPool: ptr QueryPool): Result {.cdecl.}
+  DestroyQueryPool* = proc (device: Device; queryPool: QueryPool;
+                         pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  GetQueryPoolResults* = proc (device: Device; queryPool: QueryPool;
+                            firstQuery: uint32; queryCount: uint32; dataSize: csize;
+                            pData: pointer; stride: DeviceSize;
+                            flags: QueryResultFlags): Result {.cdecl.}
+  CreateBuffer* = proc (device: Device; pCreateInfo: ptr BufferCreateInfo;
+                     pAllocator: ptr AllocationCallbacks; pBuffer: ptr Buffer): Result {.
+      cdecl.}
+  DestroyBuffer* = proc (device: Device; buffer: Buffer;
+                      pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreateBufferView* = proc (device: Device; pCreateInfo: ptr BufferViewCreateInfo;
+                         pAllocator: ptr AllocationCallbacks; pView: ptr BufferView): Result {.
+      cdecl.}
+  DestroyBufferView* = proc (device: Device; bufferView: BufferView;
+                          pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreateImage* = proc (device: Device; pCreateInfo: ptr ImageCreateInfo;
+                    pAllocator: ptr AllocationCallbacks; pImage: ptr Image): Result {.
+      cdecl.}
+  DestroyImage* = proc (device: Device; image: Image;
+                     pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  GetImageSubresourceLayout* = proc (device: Device; image: Image;
+                                  pSubresource: ptr ImageSubresource;
+                                  pLayout: ptr SubresourceLayout) {.cdecl.}
+  CreateImageView* = proc (device: Device; pCreateInfo: ptr ImageViewCreateInfo;
+                        pAllocator: ptr AllocationCallbacks; pView: ptr ImageView): Result {.
+      cdecl.}
+  DestroyImageView* = proc (device: Device; imageView: ImageView;
+                         pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreateShaderModule* = proc (device: Device;
+                           pCreateInfo: ptr ShaderModuleCreateInfo;
+                           pAllocator: ptr AllocationCallbacks;
+                           pShaderModule: ptr ShaderModule): Result {.cdecl.}
+  DestroyShaderModule* = proc (device: Device; shaderModule: ShaderModule;
+                            pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreatePipelineCache* = proc (device: Device;
+                            pCreateInfo: ptr PipelineCacheCreateInfo;
+                            pAllocator: ptr AllocationCallbacks;
+                            pPipelineCache: ptr PipelineCache): Result {.cdecl.}
+  DestroyPipelineCache* = proc (device: Device; pipelineCache: PipelineCache;
+                             pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  GetPipelineCacheData* = proc (device: Device; pipelineCache: PipelineCache;
+                             pDataSize: ptr csize; pData: pointer): Result {.cdecl.}
+  MergePipelineCaches* = proc (device: Device; dstCache: PipelineCache;
+                            srcCacheCount: uint32; pSrcCaches: ptr PipelineCache): Result {.
+      cdecl.}
+  CreateGraphicsPipelines* = proc (device: Device; pipelineCache: PipelineCache;
+                                createInfoCount: uint32;
+                                pCreateInfos: ptr GraphicsPipelineCreateInfo;
+                                pAllocator: ptr AllocationCallbacks;
+                                pPipelines: ptr Pipeline): Result {.cdecl.}
+  CreateComputePipelines* = proc (device: Device; pipelineCache: PipelineCache;
+                               createInfoCount: uint32;
+                               pCreateInfos: ptr ComputePipelineCreateInfo;
+                               pAllocator: ptr AllocationCallbacks;
+                               pPipelines: ptr Pipeline): Result {.cdecl.}
+  DestroyPipeline* = proc (device: Device; pipeline: Pipeline;
+                        pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreatePipelineLayout* = proc (device: Device;
+                             pCreateInfo: ptr PipelineLayoutCreateInfo;
+                             pAllocator: ptr AllocationCallbacks;
+                             pPipelineLayout: ptr PipelineLayout): Result {.cdecl.}
+  DestroyPipelineLayout* = proc (device: Device; pipelineLayout: PipelineLayout;
+                              pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreateSampler* = proc (device: Device; pCreateInfo: ptr SamplerCreateInfo;
+                      pAllocator: ptr AllocationCallbacks; pSampler: ptr Sampler): Result {.
+      cdecl.}
+  DestroySampler* = proc (device: Device; sampler: Sampler;
+                       pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreateDescriptorSetLayout* = proc (device: Device; pCreateInfo: ptr DescriptorSetLayoutCreateInfo;
+                                  pAllocator: ptr AllocationCallbacks;
+                                  pSetLayout: ptr DescriptorSetLayout): Result {.
+      cdecl.}
+  DestroyDescriptorSetLayout* = proc (device: Device;
+                                   descriptorSetLayout: DescriptorSetLayout;
+                                   pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreateDescriptorPool* = proc (device: Device;
+                             pCreateInfo: ptr DescriptorPoolCreateInfo;
+                             pAllocator: ptr AllocationCallbacks;
+                             pDescriptorPool: ptr DescriptorPool): Result {.cdecl.}
+  DestroyDescriptorPool* = proc (device: Device; descriptorPool: DescriptorPool;
+                              pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  ResetDescriptorPool* = proc (device: Device; descriptorPool: DescriptorPool;
+                            flags: DescriptorPoolResetFlags): Result {.cdecl.}
+  AllocateDescriptorSets* = proc (device: Device;
+                               pAllocateInfo: ptr DescriptorSetAllocateInfo;
+                               pDescriptorSets: ptr DescriptorSet): Result {.cdecl.}
+  FreeDescriptorSets* = proc (device: Device; descriptorPool: DescriptorPool;
+                           descriptorSetCount: uint32;
+                           pDescriptorSets: ptr DescriptorSet): Result {.cdecl.}
+  UpdateDescriptorSets* = proc (device: Device; descriptorWriteCount: uint32;
+                             pDescriptorWrites: ptr WriteDescriptorSet;
+                             descriptorCopyCount: uint32;
+                             pDescriptorCopies: ptr CopyDescriptorSet) {.cdecl.}
+  CreateFramebuffer* = proc (device: Device; pCreateInfo: ptr FramebufferCreateInfo;
+                          pAllocator: ptr AllocationCallbacks;
+                          pFramebuffer: ptr Framebuffer): Result {.cdecl.}
+  DestroyFramebuffer* = proc (device: Device; framebuffer: Framebuffer;
+                           pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreateRenderPass* = proc (device: Device; pCreateInfo: ptr RenderPassCreateInfo;
+                         pAllocator: ptr AllocationCallbacks;
+                         pRenderPass: ptr RenderPass): Result {.cdecl.}
+  DestroyRenderPass* = proc (device: Device; renderPass: RenderPass;
+                          pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  GetRenderAreaGranularity* = proc (device: Device; renderPass: RenderPass;
+                                 pGranularity: ptr Extent2D) {.cdecl.}
+  CreateCommandPool* = proc (device: Device; pCreateInfo: ptr CommandPoolCreateInfo;
+                          pAllocator: ptr AllocationCallbacks;
+                          pCommandPool: ptr CommandPool): Result {.cdecl.}
+  DestroyCommandPool* = proc (device: Device; commandPool: CommandPool;
+                           pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  ResetCommandPool* = proc (device: Device; commandPool: CommandPool;
+                         flags: CommandPoolResetFlags): Result {.cdecl.}
+  AllocateCommandBuffers* = proc (device: Device;
+                               pAllocateInfo: ptr CommandBufferAllocateInfo;
+                               pCommandBuffers: ptr CommandBuffer): Result {.cdecl.}
+  FreeCommandBuffers* = proc (device: Device; commandPool: CommandPool;
+                           commandBufferCount: uint32;
+                           pCommandBuffers: ptr CommandBuffer) {.cdecl.}
+  BeginCommandBuffer* = proc (commandBuffer: CommandBuffer;
+                           pBeginInfo: ptr CommandBufferBeginInfo): Result {.cdecl.}
+  EndCommandBuffer* = proc (commandBuffer: CommandBuffer): Result {.cdecl.}
+  ResetCommandBuffer* = proc (commandBuffer: CommandBuffer;
+                           flags: CommandBufferResetFlags): Result {.cdecl.}
+  CmdBindPipeline* = proc (commandBuffer: CommandBuffer;
+                        pipelineBindPoint: PipelineBindPoint; pipeline: Pipeline) {.
+      cdecl.}
+  CmdSetViewport* = proc (commandBuffer: CommandBuffer; firstViewport: uint32;
+                       viewportCount: uint32; pViewports: ptr Viewport) {.cdecl.}
+  CmdSetScissor* = proc (commandBuffer: CommandBuffer; firstScissor: uint32;
+                      scissorCount: uint32; pScissors: ptr Rect2D) {.cdecl.}
+  CmdSetLineWidth* = proc (commandBuffer: CommandBuffer; lineWidth: cfloat) {.cdecl.}
+  CmdSetDepthBias* = proc (commandBuffer: CommandBuffer;
+                        depthBiasConstantFactor: cfloat; depthBiasClamp: cfloat;
+                        depthBiasSlopeFactor: cfloat) {.cdecl.}
+  CmdSetBlendConstants* = proc (commandBuffer: CommandBuffer;
+                             blendConstants: array[4, cfloat]) {.cdecl.}
+  CmdSetDepthBounds* = proc (commandBuffer: CommandBuffer; minDepthBounds: cfloat;
+                          maxDepthBounds: cfloat) {.cdecl.}
+  CmdSetStencilCompareMask* = proc (commandBuffer: CommandBuffer;
+                                 faceMask: StencilFaceFlags; compareMask: uint32) {.
+      cdecl.}
+  CmdSetStencilWriteMask* = proc (commandBuffer: CommandBuffer;
+                               faceMask: StencilFaceFlags; writeMask: uint32) {.
+      cdecl.}
+  CmdSetStencilReference* = proc (commandBuffer: CommandBuffer;
+                               faceMask: StencilFaceFlags; reference: uint32) {.
+      cdecl.}
+  CmdBindDescriptorSets* = proc (commandBuffer: CommandBuffer;
+                              pipelineBindPoint: PipelineBindPoint;
+                              layout: PipelineLayout; firstSet: uint32;
+                              descriptorSetCount: uint32;
+                              pDescriptorSets: ptr DescriptorSet;
+                              dynamicOffsetCount: uint32;
+                              pDynamicOffsets: ptr uint32) {.cdecl.}
+  CmdBindIndexBuffer* = proc (commandBuffer: CommandBuffer; buffer: Buffer;
+                           offset: DeviceSize; indexType: IndexType) {.cdecl.}
+  CmdBindVertexBuffers* = proc (commandBuffer: CommandBuffer; firstBinding: uint32;
+                             bindingCount: uint32; pBuffers: ptr Buffer;
+                             pOffsets: ptr DeviceSize) {.cdecl.}
+  CmdDraw* = proc (commandBuffer: CommandBuffer; vertexCount: uint32;
+                instanceCount: uint32; firstVertex: uint32; firstInstance: uint32) {.
+      cdecl.}
+  CmdDrawIndexed* = proc (commandBuffer: CommandBuffer; indexCount: uint32;
+                       instanceCount: uint32; firstIndex: uint32;
+                       vertexOffset: int32; firstInstance: uint32) {.cdecl.}
+  CmdDrawIndirect* = proc (commandBuffer: CommandBuffer; buffer: Buffer;
+                        offset: DeviceSize; drawCount: uint32; stride: uint32) {.cdecl.}
+  CmdDrawIndexedIndirect* = proc (commandBuffer: CommandBuffer; buffer: Buffer;
+                               offset: DeviceSize; drawCount: uint32; stride: uint32) {.
+      cdecl.}
+  CmdDispatch* = proc (commandBuffer: CommandBuffer; groupCountX: uint32;
+                    groupCountY: uint32; groupCountZ: uint32) {.cdecl.}
+  CmdDispatchIndirect* = proc (commandBuffer: CommandBuffer; buffer: Buffer;
+                            offset: DeviceSize) {.cdecl.}
+  CmdCopyBuffer* = proc (commandBuffer: CommandBuffer; srcBuffer: Buffer;
+                      dstBuffer: Buffer; regionCount: uint32;
+                      pRegions: ptr BufferCopy) {.cdecl.}
+  CmdCopyImage* = proc (commandBuffer: CommandBuffer; srcImage: Image;
+                     srcImageLayout: ImageLayout; dstImage: Image;
+                     dstImageLayout: ImageLayout; regionCount: uint32;
+                     pRegions: ptr ImageCopy) {.cdecl.}
+  CmdBlitImage* = proc (commandBuffer: CommandBuffer; srcImage: Image;
+                     srcImageLayout: ImageLayout; dstImage: Image;
+                     dstImageLayout: ImageLayout; regionCount: uint32;
+                     pRegions: ptr ImageBlit; filter: Filter) {.cdecl.}
+  CmdCopyBufferToImage* = proc (commandBuffer: CommandBuffer; srcBuffer: Buffer;
+                             dstImage: Image; dstImageLayout: ImageLayout;
+                             regionCount: uint32; pRegions: ptr BufferImageCopy) {.
+      cdecl.}
+  CmdCopyImageToBuffer* = proc (commandBuffer: CommandBuffer; srcImage: Image;
+                             srcImageLayout: ImageLayout; dstBuffer: Buffer;
+                             regionCount: uint32; pRegions: ptr BufferImageCopy) {.
+      cdecl.}
+  CmdUpdateBuffer* = proc (commandBuffer: CommandBuffer; dstBuffer: Buffer;
+                        dstOffset: DeviceSize; dataSize: DeviceSize; pData: pointer) {.
+      cdecl.}
+  CmdFillBuffer* = proc (commandBuffer: CommandBuffer; dstBuffer: Buffer;
+                      dstOffset: DeviceSize; size: DeviceSize; data: uint32) {.cdecl.}
+  CmdClearColorImage* = proc (commandBuffer: CommandBuffer; image: Image;
+                           imageLayout: ImageLayout; pColor: ptr ClearColorValue;
+                           rangeCount: uint32; pRanges: ptr ImageSubresourceRange) {.
+      cdecl.}
+  CmdClearDepthStencilImage* = proc (commandBuffer: CommandBuffer; image: Image;
+                                  imageLayout: ImageLayout;
+                                  pDepthStencil: ptr ClearDepthStencilValue;
+                                  rangeCount: uint32;
+                                  pRanges: ptr ImageSubresourceRange) {.cdecl.}
+  CmdClearAttachments* = proc (commandBuffer: CommandBuffer; attachmentCount: uint32;
+                            pAttachments: ptr ClearAttachment; rectCount: uint32;
+                            pRects: ptr ClearRect) {.cdecl.}
+  CmdResolveImage* = proc (commandBuffer: CommandBuffer; srcImage: Image;
+                        srcImageLayout: ImageLayout; dstImage: Image;
+                        dstImageLayout: ImageLayout; regionCount: uint32;
+                        pRegions: ptr ImageResolve) {.cdecl.}
+  CmdSetEvent* = proc (commandBuffer: CommandBuffer; event: Event;
+                    stageMask: PipelineStageFlags) {.cdecl.}
+  CmdResetEvent* = proc (commandBuffer: CommandBuffer; event: Event;
+                      stageMask: PipelineStageFlags) {.cdecl.}
+  CmdWaitEvents* = proc (commandBuffer: CommandBuffer; eventCount: uint32;
+                      pEvents: ptr Event; srcStageMask: PipelineStageFlags;
+                      dstStageMask: PipelineStageFlags;
+                      memoryBarrierCount: uint32;
+                      pMemoryBarriers: ptr MemoryBarrier;
+                      bufferMemoryBarrierCount: uint32;
+                      pBufferMemoryBarriers: ptr BufferMemoryBarrier;
+                      imageMemoryBarrierCount: uint32;
+                      pImageMemoryBarriers: ptr ImageMemoryBarrier) {.cdecl.}
+  CmdPipelineBarrier* = proc (commandBuffer: CommandBuffer;
+                           srcStageMask: PipelineStageFlags;
+                           dstStageMask: PipelineStageFlags;
+                           dependencyFlags: DependencyFlags;
+                           memoryBarrierCount: uint32;
+                           pMemoryBarriers: ptr MemoryBarrier;
+                           bufferMemoryBarrierCount: uint32;
+                           pBufferMemoryBarriers: ptr BufferMemoryBarrier;
+                           imageMemoryBarrierCount: uint32;
+                           pImageMemoryBarriers: ptr ImageMemoryBarrier) {.cdecl.}
+  CmdBeginQuery* = proc (commandBuffer: CommandBuffer; queryPool: QueryPool;
+                      query: uint32; flags: QueryControlFlags) {.cdecl.}
+  CmdEndQuery* = proc (commandBuffer: CommandBuffer; queryPool: QueryPool;
+                    query: uint32) {.cdecl.}
+  CmdResetQueryPool* = proc (commandBuffer: CommandBuffer; queryPool: QueryPool;
+                          firstQuery: uint32; queryCount: uint32) {.cdecl.}
+  CmdWriteTimestamp* = proc (commandBuffer: CommandBuffer;
+                          pipelineStage: PipelineStageFlagBits;
+                          queryPool: QueryPool; query: uint32) {.cdecl.}
+  CmdCopyQueryPoolResults* = proc (commandBuffer: CommandBuffer;
+                                queryPool: QueryPool; firstQuery: uint32;
+                                queryCount: uint32; dstBuffer: Buffer;
+                                dstOffset: DeviceSize; stride: DeviceSize;
+                                flags: QueryResultFlags) {.cdecl.}
+  CmdPushConstants* = proc (commandBuffer: CommandBuffer; layout: PipelineLayout;
+                         stageFlags: ShaderStageFlags; offset: uint32; size: uint32;
+                         pValues: pointer) {.cdecl.}
+  CmdBeginRenderPass* = proc (commandBuffer: CommandBuffer;
+                           pRenderPassBegin: ptr RenderPassBeginInfo;
+                           contents: SubpassContents) {.cdecl.}
+  CmdNextSubpass* = proc (commandBuffer: CommandBuffer; contents: SubpassContents) {.
+      cdecl.}
+  CmdEndRenderPass* = proc (commandBuffer: CommandBuffer) {.cdecl.}
+  CmdExecuteCommands* = proc (commandBuffer: CommandBuffer;
+                           commandBufferCount: uint32;
+                           pCommandBuffers: ptr CommandBuffer) {.cdecl.}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+when not defined(NO_PROTOTYPES):
+  proc createInstance*(pCreateInfo: ptr InstanceCreateInfo;
+                      pAllocator: ptr AllocationCallbacks; pInstance: ptr Instance): Result {.
+      cdecl, importc: "vkCreateInstance", dynlib: vulkandll.}
+  proc destroyInstance*(instance: Instance; pAllocator: ptr AllocationCallbacks) {.
+      cdecl, importc: "vkDestroyInstance", dynlib: vulkandll.}
+  proc enumeratePhysicalDevices*(instance: Instance;
+                                pPhysicalDeviceCount: ptr uint32;
+                                pPhysicalDevices: ptr PhysicalDevice): Result {.
+      cdecl, importc: "vkEnumeratePhysicalDevices", dynlib: vulkandll.}
+  proc getPhysicalDeviceFeatures*(physicalDevice: PhysicalDevice;
+                                 pFeatures: ptr PhysicalDeviceFeatures) {.cdecl,
+      importc: "vkGetPhysicalDeviceFeatures", dynlib: vulkandll.}
+  proc getPhysicalDeviceFormatProperties*(physicalDevice: PhysicalDevice;
+      format: Format; pFormatProperties: ptr FormatProperties) {.cdecl,
+      importc: "vkGetPhysicalDeviceFormatProperties", dynlib: vulkandll.}
+  proc getPhysicalDeviceImageFormatProperties*(physicalDevice: PhysicalDevice;
+      format: Format; `type`: ImageType; tiling: ImageTiling; usage: ImageUsageFlags;
+      flags: ImageCreateFlags; pImageFormatProperties: ptr ImageFormatProperties): Result {.
+      cdecl, importc: "vkGetPhysicalDeviceImageFormatProperties", dynlib: vulkandll.}
+  proc getPhysicalDeviceProperties*(physicalDevice: PhysicalDevice;
+                                   pProperties: ptr PhysicalDeviceProperties) {.
+      cdecl, importc: "vkGetPhysicalDeviceProperties", dynlib: vulkandll.}
+  proc getPhysicalDeviceQueueFamilyProperties*(physicalDevice: PhysicalDevice;
+      pQueueFamilyPropertyCount: ptr uint32;
+      pQueueFamilyProperties: ptr QueueFamilyProperties) {.cdecl,
+      importc: "vkGetPhysicalDeviceQueueFamilyProperties", dynlib: vulkandll.}
+  proc getPhysicalDeviceMemoryProperties*(physicalDevice: PhysicalDevice;
+      pMemoryProperties: ptr PhysicalDeviceMemoryProperties) {.cdecl,
+      importc: "vkGetPhysicalDeviceMemoryProperties", dynlib: vulkandll.}
+  proc getInstanceProcAddr*(instance: Instance; pName: cstring): VoidFunction {.cdecl,
+      importc: "vkGetInstanceProcAddr", dynlib: vulkandll.}
+  proc getDeviceProcAddr*(device: Device; pName: cstring): VoidFunction {.cdecl,
+      importc: "vkGetDeviceProcAddr", dynlib: vulkandll.}
+  proc createDevice*(physicalDevice: PhysicalDevice;
+                    pCreateInfo: ptr DeviceCreateInfo;
+                    pAllocator: ptr AllocationCallbacks; pDevice: ptr Device): Result {.
+      cdecl, importc: "vkCreateDevice", dynlib: vulkandll.}
+  proc destroyDevice*(device: Device; pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyDevice", dynlib: vulkandll.}
+  proc enumerateInstanceExtensionProperties*(pLayerName: cstring;
+      pPropertyCount: ptr uint32; pProperties: ptr ExtensionProperties): Result {.
+      cdecl, importc: "vkEnumerateInstanceExtensionProperties", dynlib: vulkandll.}
+  proc enumerateDeviceExtensionProperties*(physicalDevice: PhysicalDevice;
+      pLayerName: cstring; pPropertyCount: ptr uint32;
+      pProperties: ptr ExtensionProperties): Result {.cdecl,
+      importc: "vkEnumerateDeviceExtensionProperties", dynlib: vulkandll.}
+  proc enumerateInstanceLayerProperties*(pPropertyCount: ptr uint32;
+                                        pProperties: ptr LayerProperties): Result {.
+      cdecl, importc: "vkEnumerateInstanceLayerProperties", dynlib: vulkandll.}
+  proc enumerateDeviceLayerProperties*(physicalDevice: PhysicalDevice;
+                                      pPropertyCount: ptr uint32;
+                                      pProperties: ptr LayerProperties): Result {.
+      cdecl, importc: "vkEnumerateDeviceLayerProperties", dynlib: vulkandll.}
+  proc getDeviceQueue*(device: Device; queueFamilyIndex: uint32; queueIndex: uint32;
+                      pQueue: ptr Queue) {.cdecl, importc: "vkGetDeviceQueue",
+                                        dynlib: vulkandll.}
+  proc queueSubmit*(queue: Queue; submitCount: uint32; pSubmits: ptr SubmitInfo;
+                   fence: Fence): Result {.cdecl, importc: "vkQueueSubmit",
+                                        dynlib: vulkandll.}
+  proc queueWaitIdle*(queue: Queue): Result {.cdecl, importc: "vkQueueWaitIdle",
+      dynlib: vulkandll.}
+  proc deviceWaitIdle*(device: Device): Result {.cdecl, importc: "vkDeviceWaitIdle",
+      dynlib: vulkandll.}
+  proc allocateMemory*(device: Device; pAllocateInfo: ptr MemoryAllocateInfo;
+                      pAllocator: ptr AllocationCallbacks;
+                      pMemory: ptr DeviceMemory): Result {.cdecl,
+      importc: "vkAllocateMemory", dynlib: vulkandll.}
+  proc freeMemory*(device: Device; memory: DeviceMemory;
+                  pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkFreeMemory", dynlib: vulkandll.}
+  proc mapMemory*(device: Device; memory: DeviceMemory; offset: DeviceSize;
+                 size: DeviceSize; flags: MemoryMapFlags; ppData: ptr pointer): Result {.
+      cdecl, importc: "vkMapMemory", dynlib: vulkandll.}
+  proc unmapMemory*(device: Device; memory: DeviceMemory) {.cdecl,
+      importc: "vkUnmapMemory", dynlib: vulkandll.}
+  proc flushMappedMemoryRanges*(device: Device; memoryRangeCount: uint32;
+                               pMemoryRanges: ptr MappedMemoryRange): Result {.
+      cdecl, importc: "vkFlushMappedMemoryRanges", dynlib: vulkandll.}
+  proc invalidateMappedMemoryRanges*(device: Device; memoryRangeCount: uint32;
+                                    pMemoryRanges: ptr MappedMemoryRange): Result {.
+      cdecl, importc: "vkInvalidateMappedMemoryRanges", dynlib: vulkandll.}
+  proc getDeviceMemoryCommitment*(device: Device; memory: DeviceMemory;
+                                 pCommittedMemoryInBytes: ptr DeviceSize) {.cdecl,
+      importc: "vkGetDeviceMemoryCommitment", dynlib: vulkandll.}
+  proc bindBufferMemory*(device: Device; buffer: Buffer; memory: DeviceMemory;
+                        memoryOffset: DeviceSize): Result {.cdecl,
+      importc: "vkBindBufferMemory", dynlib: vulkandll.}
+  proc bindImageMemory*(device: Device; image: Image; memory: DeviceMemory;
+                       memoryOffset: DeviceSize): Result {.cdecl,
+      importc: "vkBindImageMemory", dynlib: vulkandll.}
+  proc getBufferMemoryRequirements*(device: Device; buffer: Buffer;
+                                   pMemoryRequirements: ptr MemoryRequirements) {.
+      cdecl, importc: "vkGetBufferMemoryRequirements", dynlib: vulkandll.}
+  proc getImageMemoryRequirements*(device: Device; image: Image;
+                                  pMemoryRequirements: ptr MemoryRequirements) {.
+      cdecl, importc: "vkGetImageMemoryRequirements", dynlib: vulkandll.}
+  proc getImageSparseMemoryRequirements*(device: Device; image: Image;
+      pSparseMemoryRequirementCount: ptr uint32; pSparseMemoryRequirements: ptr SparseImageMemoryRequirements) {.
+      cdecl, importc: "vkGetImageSparseMemoryRequirements", dynlib: vulkandll.}
+  proc getPhysicalDeviceSparseImageFormatProperties*(
+      physicalDevice: PhysicalDevice; format: Format; `type`: ImageType;
+      samples: SampleCountFlagBits; usage: ImageUsageFlags; tiling: ImageTiling;
+      pPropertyCount: ptr uint32; pProperties: ptr SparseImageFormatProperties) {.
+      cdecl, importc: "vkGetPhysicalDeviceSparseImageFormatProperties",
+      dynlib: vulkandll.}
+  proc queueBindSparse*(queue: Queue; bindInfoCount: uint32;
+                       pBindInfo: ptr BindSparseInfo; fence: Fence): Result {.cdecl,
+      importc: "vkQueueBindSparse", dynlib: vulkandll.}
+  proc createFence*(device: Device; pCreateInfo: ptr FenceCreateInfo;
+                   pAllocator: ptr AllocationCallbacks; pFence: ptr Fence): Result {.
+      cdecl, importc: "vkCreateFence", dynlib: vulkandll.}
+  proc destroyFence*(device: Device; fence: Fence;
+                    pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyFence", dynlib: vulkandll.}
+  proc resetFences*(device: Device; fenceCount: uint32; pFences: ptr Fence): Result {.
+      cdecl, importc: "vkResetFences", dynlib: vulkandll.}
+  proc getFenceStatus*(device: Device; fence: Fence): Result {.cdecl,
+      importc: "vkGetFenceStatus", dynlib: vulkandll.}
+  proc waitForFences*(device: Device; fenceCount: uint32; pFences: ptr Fence;
+                     waitAll: Bool32; timeout: uint64): Result {.cdecl,
+      importc: "vkWaitForFences", dynlib: vulkandll.}
+  proc createSemaphore*(device: Device; pCreateInfo: ptr SemaphoreCreateInfo;
+                       pAllocator: ptr AllocationCallbacks;
+                       pSemaphore: ptr Semaphore): Result {.cdecl,
+      importc: "vkCreateSemaphore", dynlib: vulkandll.}
+  proc destroySemaphore*(device: Device; semaphore: Semaphore;
+                        pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroySemaphore", dynlib: vulkandll.}
+  proc createEvent*(device: Device; pCreateInfo: ptr EventCreateInfo;
+                   pAllocator: ptr AllocationCallbacks; pEvent: ptr Event): Result {.
+      cdecl, importc: "vkCreateEvent", dynlib: vulkandll.}
+  proc destroyEvent*(device: Device; event: Event;
+                    pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyEvent", dynlib: vulkandll.}
+  proc getEventStatus*(device: Device; event: Event): Result {.cdecl,
+      importc: "vkGetEventStatus", dynlib: vulkandll.}
+  proc setEvent*(device: Device; event: Event): Result {.cdecl, importc: "vkSetEvent",
+      dynlib: vulkandll.}
+  proc resetEvent*(device: Device; event: Event): Result {.cdecl,
+      importc: "vkResetEvent", dynlib: vulkandll.}
+  proc createQueryPool*(device: Device; pCreateInfo: ptr QueryPoolCreateInfo;
+                       pAllocator: ptr AllocationCallbacks;
+                       pQueryPool: ptr QueryPool): Result {.cdecl,
+      importc: "vkCreateQueryPool", dynlib: vulkandll.}
+  proc destroyQueryPool*(device: Device; queryPool: QueryPool;
+                        pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyQueryPool", dynlib: vulkandll.}
+  proc getQueryPoolResults*(device: Device; queryPool: QueryPool; firstQuery: uint32;
+                           queryCount: uint32; dataSize: csize; pData: pointer;
+                           stride: DeviceSize; flags: QueryResultFlags): Result {.
+      cdecl, importc: "vkGetQueryPoolResults", dynlib: vulkandll.}
+  proc createBuffer*(device: Device; pCreateInfo: ptr BufferCreateInfo;
+                    pAllocator: ptr AllocationCallbacks; pBuffer: ptr Buffer): Result {.
+      cdecl, importc: "vkCreateBuffer", dynlib: vulkandll.}
+  proc destroyBuffer*(device: Device; buffer: Buffer;
+                     pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyBuffer", dynlib: vulkandll.}
+  proc createBufferView*(device: Device; pCreateInfo: ptr BufferViewCreateInfo;
+                        pAllocator: ptr AllocationCallbacks; pView: ptr BufferView): Result {.
+      cdecl, importc: "vkCreateBufferView", dynlib: vulkandll.}
+  proc destroyBufferView*(device: Device; bufferView: BufferView;
+                         pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyBufferView", dynlib: vulkandll.}
+  proc createImage*(device: Device; pCreateInfo: ptr ImageCreateInfo;
+                   pAllocator: ptr AllocationCallbacks; pImage: ptr Image): Result {.
+      cdecl, importc: "vkCreateImage", dynlib: vulkandll.}
+  proc destroyImage*(device: Device; image: Image;
+                    pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyImage", dynlib: vulkandll.}
+  proc getImageSubresourceLayout*(device: Device; image: Image;
+                                 pSubresource: ptr ImageSubresource;
+                                 pLayout: ptr SubresourceLayout) {.cdecl,
+      importc: "vkGetImageSubresourceLayout", dynlib: vulkandll.}
+  proc createImageView*(device: Device; pCreateInfo: ptr ImageViewCreateInfo;
+                       pAllocator: ptr AllocationCallbacks; pView: ptr ImageView): Result {.
+      cdecl, importc: "vkCreateImageView", dynlib: vulkandll.}
+  proc destroyImageView*(device: Device; imageView: ImageView;
+                        pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyImageView", dynlib: vulkandll.}
+  proc createShaderModule*(device: Device; pCreateInfo: ptr ShaderModuleCreateInfo;
+                          pAllocator: ptr AllocationCallbacks;
+                          pShaderModule: ptr ShaderModule): Result {.cdecl,
+      importc: "vkCreateShaderModule", dynlib: vulkandll.}
+  proc destroyShaderModule*(device: Device; shaderModule: ShaderModule;
+                           pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyShaderModule", dynlib: vulkandll.}
+  proc createPipelineCache*(device: Device;
+                           pCreateInfo: ptr PipelineCacheCreateInfo;
+                           pAllocator: ptr AllocationCallbacks;
+                           pPipelineCache: ptr PipelineCache): Result {.cdecl,
+      importc: "vkCreatePipelineCache", dynlib: vulkandll.}
+  proc destroyPipelineCache*(device: Device; pipelineCache: PipelineCache;
+                            pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyPipelineCache", dynlib: vulkandll.}
+  proc getPipelineCacheData*(device: Device; pipelineCache: PipelineCache;
+                            pDataSize: ptr csize; pData: pointer): Result {.cdecl,
+      importc: "vkGetPipelineCacheData", dynlib: vulkandll.}
+  proc mergePipelineCaches*(device: Device; dstCache: PipelineCache;
+                           srcCacheCount: uint32; pSrcCaches: ptr PipelineCache): Result {.
+      cdecl, importc: "vkMergePipelineCaches", dynlib: vulkandll.}
+  proc createGraphicsPipelines*(device: Device; pipelineCache: PipelineCache;
+                               createInfoCount: uint32;
+                               pCreateInfos: ptr GraphicsPipelineCreateInfo;
+                               pAllocator: ptr AllocationCallbacks;
+                               pPipelines: ptr Pipeline): Result {.cdecl,
+      importc: "vkCreateGraphicsPipelines", dynlib: vulkandll.}
+  proc createComputePipelines*(device: Device; pipelineCache: PipelineCache;
+                              createInfoCount: uint32;
+                              pCreateInfos: ptr ComputePipelineCreateInfo;
+                              pAllocator: ptr AllocationCallbacks;
+                              pPipelines: ptr Pipeline): Result {.cdecl,
+      importc: "vkCreateComputePipelines", dynlib: vulkandll.}
+  proc destroyPipeline*(device: Device; pipeline: Pipeline;
+                       pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyPipeline", dynlib: vulkandll.}
+  proc createPipelineLayout*(device: Device;
+                            pCreateInfo: ptr PipelineLayoutCreateInfo;
+                            pAllocator: ptr AllocationCallbacks;
+                            pPipelineLayout: ptr PipelineLayout): Result {.cdecl,
+      importc: "vkCreatePipelineLayout", dynlib: vulkandll.}
+  proc destroyPipelineLayout*(device: Device; pipelineLayout: PipelineLayout;
+                             pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyPipelineLayout", dynlib: vulkandll.}
+  proc createSampler*(device: Device; pCreateInfo: ptr SamplerCreateInfo;
+                     pAllocator: ptr AllocationCallbacks; pSampler: ptr Sampler): Result {.
+      cdecl, importc: "vkCreateSampler", dynlib: vulkandll.}
+  proc destroySampler*(device: Device; sampler: Sampler;
+                      pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroySampler", dynlib: vulkandll.}
+  proc createDescriptorSetLayout*(device: Device; pCreateInfo: ptr DescriptorSetLayoutCreateInfo;
+                                 pAllocator: ptr AllocationCallbacks;
+                                 pSetLayout: ptr DescriptorSetLayout): Result {.
+      cdecl, importc: "vkCreateDescriptorSetLayout", dynlib: vulkandll.}
+  proc destroyDescriptorSetLayout*(device: Device;
+                                  descriptorSetLayout: DescriptorSetLayout;
+                                  pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyDescriptorSetLayout", dynlib: vulkandll.}
+  proc createDescriptorPool*(device: Device;
+                            pCreateInfo: ptr DescriptorPoolCreateInfo;
+                            pAllocator: ptr AllocationCallbacks;
+                            pDescriptorPool: ptr DescriptorPool): Result {.cdecl,
+      importc: "vkCreateDescriptorPool", dynlib: vulkandll.}
+  proc destroyDescriptorPool*(device: Device; descriptorPool: DescriptorPool;
+                             pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyDescriptorPool", dynlib: vulkandll.}
+  proc resetDescriptorPool*(device: Device; descriptorPool: DescriptorPool;
+                           flags: DescriptorPoolResetFlags): Result {.cdecl,
+      importc: "vkResetDescriptorPool", dynlib: vulkandll.}
+  proc allocateDescriptorSets*(device: Device;
+                              pAllocateInfo: ptr DescriptorSetAllocateInfo;
+                              pDescriptorSets: ptr DescriptorSet): Result {.cdecl,
+      importc: "vkAllocateDescriptorSets", dynlib: vulkandll.}
+  proc freeDescriptorSets*(device: Device; descriptorPool: DescriptorPool;
+                          descriptorSetCount: uint32;
+                          pDescriptorSets: ptr DescriptorSet): Result {.cdecl,
+      importc: "vkFreeDescriptorSets", dynlib: vulkandll.}
+  proc updateDescriptorSets*(device: Device; descriptorWriteCount: uint32;
+                            pDescriptorWrites: ptr WriteDescriptorSet;
+                            descriptorCopyCount: uint32;
+                            pDescriptorCopies: ptr CopyDescriptorSet) {.cdecl,
+      importc: "vkUpdateDescriptorSets", dynlib: vulkandll.}
+  proc createFramebuffer*(device: Device; pCreateInfo: ptr FramebufferCreateInfo;
+                         pAllocator: ptr AllocationCallbacks;
+                         pFramebuffer: ptr Framebuffer): Result {.cdecl,
+      importc: "vkCreateFramebuffer", dynlib: vulkandll.}
+  proc destroyFramebuffer*(device: Device; framebuffer: Framebuffer;
+                          pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyFramebuffer", dynlib: vulkandll.}
+  proc createRenderPass*(device: Device; pCreateInfo: ptr RenderPassCreateInfo;
+                        pAllocator: ptr AllocationCallbacks;
+                        pRenderPass: ptr RenderPass): Result {.cdecl,
+      importc: "vkCreateRenderPass", dynlib: vulkandll.}
+  proc destroyRenderPass*(device: Device; renderPass: RenderPass;
+                         pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyRenderPass", dynlib: vulkandll.}
+  proc getRenderAreaGranularity*(device: Device; renderPass: RenderPass;
+                                pGranularity: ptr Extent2D) {.cdecl,
+      importc: "vkGetRenderAreaGranularity", dynlib: vulkandll.}
+  proc createCommandPool*(device: Device; pCreateInfo: ptr CommandPoolCreateInfo;
+                         pAllocator: ptr AllocationCallbacks;
+                         pCommandPool: ptr CommandPool): Result {.cdecl,
+      importc: "vkCreateCommandPool", dynlib: vulkandll.}
+  proc destroyCommandPool*(device: Device; commandPool: CommandPool;
+                          pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyCommandPool", dynlib: vulkandll.}
+  proc resetCommandPool*(device: Device; commandPool: CommandPool;
+                        flags: CommandPoolResetFlags): Result {.cdecl,
+      importc: "vkResetCommandPool", dynlib: vulkandll.}
+  proc allocateCommandBuffers*(device: Device;
+                              pAllocateInfo: ptr CommandBufferAllocateInfo;
+                              pCommandBuffers: ptr CommandBuffer): Result {.cdecl,
+      importc: "vkAllocateCommandBuffers", dynlib: vulkandll.}
+  proc freeCommandBuffers*(device: Device; commandPool: CommandPool;
+                          commandBufferCount: uint32;
+                          pCommandBuffers: ptr CommandBuffer) {.cdecl,
+      importc: "vkFreeCommandBuffers", dynlib: vulkandll.}
+  proc beginCommandBuffer*(commandBuffer: CommandBuffer;
+                          pBeginInfo: ptr CommandBufferBeginInfo): Result {.cdecl,
+      importc: "vkBeginCommandBuffer", dynlib: vulkandll.}
+  proc endCommandBuffer*(commandBuffer: CommandBuffer): Result {.cdecl,
+      importc: "vkEndCommandBuffer", dynlib: vulkandll.}
+  proc resetCommandBuffer*(commandBuffer: CommandBuffer;
+                          flags: CommandBufferResetFlags): Result {.cdecl,
+      importc: "vkResetCommandBuffer", dynlib: vulkandll.}
+  proc cmdBindPipeline*(commandBuffer: CommandBuffer;
+                       pipelineBindPoint: PipelineBindPoint; pipeline: Pipeline) {.
+      cdecl, importc: "vkCmdBindPipeline", dynlib: vulkandll.}
+  proc cmdSetViewport*(commandBuffer: CommandBuffer; firstViewport: uint32;
+                      viewportCount: uint32; pViewports: ptr Viewport) {.cdecl,
+      importc: "vkCmdSetViewport", dynlib: vulkandll.}
+  proc cmdSetScissor*(commandBuffer: CommandBuffer; firstScissor: uint32;
+                     scissorCount: uint32; pScissors: ptr Rect2D) {.cdecl,
+      importc: "vkCmdSetScissor", dynlib: vulkandll.}
+  proc cmdSetLineWidth*(commandBuffer: CommandBuffer; lineWidth: cfloat) {.cdecl,
+      importc: "vkCmdSetLineWidth", dynlib: vulkandll.}
+  proc cmdSetDepthBias*(commandBuffer: CommandBuffer;
+                       depthBiasConstantFactor: cfloat; depthBiasClamp: cfloat;
+                       depthBiasSlopeFactor: cfloat) {.cdecl,
+      importc: "vkCmdSetDepthBias", dynlib: vulkandll.}
+  proc cmdSetBlendConstants*(commandBuffer: CommandBuffer;
+                            blendConstants: array[4, cfloat]) {.cdecl,
+      importc: "vkCmdSetBlendConstants", dynlib: vulkandll.}
+  proc cmdSetDepthBounds*(commandBuffer: CommandBuffer; minDepthBounds: cfloat;
+                         maxDepthBounds: cfloat) {.cdecl,
+      importc: "vkCmdSetDepthBounds", dynlib: vulkandll.}
+  proc cmdSetStencilCompareMask*(commandBuffer: CommandBuffer;
+                                faceMask: StencilFaceFlags; compareMask: uint32) {.
+      cdecl, importc: "vkCmdSetStencilCompareMask", dynlib: vulkandll.}
+  proc cmdSetStencilWriteMask*(commandBuffer: CommandBuffer;
+                              faceMask: StencilFaceFlags; writeMask: uint32) {.
+      cdecl, importc: "vkCmdSetStencilWriteMask", dynlib: vulkandll.}
+  proc cmdSetStencilReference*(commandBuffer: CommandBuffer;
+                              faceMask: StencilFaceFlags; reference: uint32) {.
+      cdecl, importc: "vkCmdSetStencilReference", dynlib: vulkandll.}
+  proc cmdBindDescriptorSets*(commandBuffer: CommandBuffer;
+                             pipelineBindPoint: PipelineBindPoint;
+                             layout: PipelineLayout; firstSet: uint32;
+                             descriptorSetCount: uint32;
+                             pDescriptorSets: ptr DescriptorSet;
+                             dynamicOffsetCount: uint32;
+                             pDynamicOffsets: ptr uint32) {.cdecl,
+      importc: "vkCmdBindDescriptorSets", dynlib: vulkandll.}
+  proc cmdBindIndexBuffer*(commandBuffer: CommandBuffer; buffer: Buffer;
+                          offset: DeviceSize; indexType: IndexType) {.cdecl,
+      importc: "vkCmdBindIndexBuffer", dynlib: vulkandll.}
+  proc cmdBindVertexBuffers*(commandBuffer: CommandBuffer; firstBinding: uint32;
+                            bindingCount: uint32; pBuffers: ptr Buffer;
+                            pOffsets: ptr DeviceSize) {.cdecl,
+      importc: "vkCmdBindVertexBuffers", dynlib: vulkandll.}
+  proc cmdDraw*(commandBuffer: CommandBuffer; vertexCount: uint32;
+               instanceCount: uint32; firstVertex: uint32; firstInstance: uint32) {.
+      cdecl, importc: "vkCmdDraw", dynlib: vulkandll.}
+  proc cmdDrawIndexed*(commandBuffer: CommandBuffer; indexCount: uint32;
+                      instanceCount: uint32; firstIndex: uint32;
+                      vertexOffset: int32; firstInstance: uint32) {.cdecl,
+      importc: "vkCmdDrawIndexed", dynlib: vulkandll.}
+  proc cmdDrawIndirect*(commandBuffer: CommandBuffer; buffer: Buffer;
+                       offset: DeviceSize; drawCount: uint32; stride: uint32) {.cdecl,
+      importc: "vkCmdDrawIndirect", dynlib: vulkandll.}
+  proc cmdDrawIndexedIndirect*(commandBuffer: CommandBuffer; buffer: Buffer;
+                              offset: DeviceSize; drawCount: uint32; stride: uint32) {.
+      cdecl, importc: "vkCmdDrawIndexedIndirect", dynlib: vulkandll.}
+  proc cmdDispatch*(commandBuffer: CommandBuffer; groupCountX: uint32;
+                   groupCountY: uint32; groupCountZ: uint32) {.cdecl,
+      importc: "vkCmdDispatch", dynlib: vulkandll.}
+  proc cmdDispatchIndirect*(commandBuffer: CommandBuffer; buffer: Buffer;
+                           offset: DeviceSize) {.cdecl,
+      importc: "vkCmdDispatchIndirect", dynlib: vulkandll.}
+  proc cmdCopyBuffer*(commandBuffer: CommandBuffer; srcBuffer: Buffer;
+                     dstBuffer: Buffer; regionCount: uint32;
+                     pRegions: ptr BufferCopy) {.cdecl, importc: "vkCmdCopyBuffer",
+      dynlib: vulkandll.}
+  proc cmdCopyImage*(commandBuffer: CommandBuffer; srcImage: Image;
+                    srcImageLayout: ImageLayout; dstImage: Image;
+                    dstImageLayout: ImageLayout; regionCount: uint32;
+                    pRegions: ptr ImageCopy) {.cdecl, importc: "vkCmdCopyImage",
+      dynlib: vulkandll.}
+  proc cmdBlitImage*(commandBuffer: CommandBuffer; srcImage: Image;
+                    srcImageLayout: ImageLayout; dstImage: Image;
+                    dstImageLayout: ImageLayout; regionCount: uint32;
+                    pRegions: ptr ImageBlit; filter: Filter) {.cdecl,
+      importc: "vkCmdBlitImage", dynlib: vulkandll.}
+  proc cmdCopyBufferToImage*(commandBuffer: CommandBuffer; srcBuffer: Buffer;
+                            dstImage: Image; dstImageLayout: ImageLayout;
+                            regionCount: uint32; pRegions: ptr BufferImageCopy) {.
+      cdecl, importc: "vkCmdCopyBufferToImage", dynlib: vulkandll.}
+  proc cmdCopyImageToBuffer*(commandBuffer: CommandBuffer; srcImage: Image;
+                            srcImageLayout: ImageLayout; dstBuffer: Buffer;
+                            regionCount: uint32; pRegions: ptr BufferImageCopy) {.
+      cdecl, importc: "vkCmdCopyImageToBuffer", dynlib: vulkandll.}
+  proc cmdUpdateBuffer*(commandBuffer: CommandBuffer; dstBuffer: Buffer;
+                       dstOffset: DeviceSize; dataSize: DeviceSize; pData: pointer) {.
+      cdecl, importc: "vkCmdUpdateBuffer", dynlib: vulkandll.}
+  proc cmdFillBuffer*(commandBuffer: CommandBuffer; dstBuffer: Buffer;
+                     dstOffset: DeviceSize; size: DeviceSize; data: uint32) {.cdecl,
+      importc: "vkCmdFillBuffer", dynlib: vulkandll.}
+  proc cmdClearColorImage*(commandBuffer: CommandBuffer; image: Image;
+                          imageLayout: ImageLayout; pColor: ptr ClearColorValue;
+                          rangeCount: uint32; pRanges: ptr ImageSubresourceRange) {.
+      cdecl, importc: "vkCmdClearColorImage", dynlib: vulkandll.}
+  proc cmdClearDepthStencilImage*(commandBuffer: CommandBuffer; image: Image;
+                                 imageLayout: ImageLayout;
+                                 pDepthStencil: ptr ClearDepthStencilValue;
+                                 rangeCount: uint32;
+                                 pRanges: ptr ImageSubresourceRange) {.cdecl,
+      importc: "vkCmdClearDepthStencilImage", dynlib: vulkandll.}
+  proc cmdClearAttachments*(commandBuffer: CommandBuffer; attachmentCount: uint32;
+                           pAttachments: ptr ClearAttachment; rectCount: uint32;
+                           pRects: ptr ClearRect) {.cdecl,
+      importc: "vkCmdClearAttachments", dynlib: vulkandll.}
+  proc cmdResolveImage*(commandBuffer: CommandBuffer; srcImage: Image;
+                       srcImageLayout: ImageLayout; dstImage: Image;
+                       dstImageLayout: ImageLayout; regionCount: uint32;
+                       pRegions: ptr ImageResolve) {.cdecl,
+      importc: "vkCmdResolveImage", dynlib: vulkandll.}
+  proc cmdSetEvent*(commandBuffer: CommandBuffer; event: Event;
+                   stageMask: PipelineStageFlags) {.cdecl,
+      importc: "vkCmdSetEvent", dynlib: vulkandll.}
+  proc cmdResetEvent*(commandBuffer: CommandBuffer; event: Event;
+                     stageMask: PipelineStageFlags) {.cdecl,
+      importc: "vkCmdResetEvent", dynlib: vulkandll.}
+  proc cmdWaitEvents*(commandBuffer: CommandBuffer; eventCount: uint32;
+                     pEvents: ptr Event; srcStageMask: PipelineStageFlags;
+                     dstStageMask: PipelineStageFlags; memoryBarrierCount: uint32;
+                     pMemoryBarriers: ptr MemoryBarrier;
+                     bufferMemoryBarrierCount: uint32;
+                     pBufferMemoryBarriers: ptr BufferMemoryBarrier;
+                     imageMemoryBarrierCount: uint32;
+                     pImageMemoryBarriers: ptr ImageMemoryBarrier) {.cdecl,
+      importc: "vkCmdWaitEvents", dynlib: vulkandll.}
+  proc cmdPipelineBarrier*(commandBuffer: CommandBuffer;
+                          srcStageMask: PipelineStageFlags;
+                          dstStageMask: PipelineStageFlags;
+                          dependencyFlags: DependencyFlags;
+                          memoryBarrierCount: uint32;
+                          pMemoryBarriers: ptr MemoryBarrier;
+                          bufferMemoryBarrierCount: uint32;
+                          pBufferMemoryBarriers: ptr BufferMemoryBarrier;
+                          imageMemoryBarrierCount: uint32;
+                          pImageMemoryBarriers: ptr ImageMemoryBarrier) {.cdecl,
+      importc: "vkCmdPipelineBarrier", dynlib: vulkandll.}
+  proc cmdBeginQuery*(commandBuffer: CommandBuffer; queryPool: QueryPool;
+                     query: uint32; flags: QueryControlFlags) {.cdecl,
+      importc: "vkCmdBeginQuery", dynlib: vulkandll.}
+  proc cmdEndQuery*(commandBuffer: CommandBuffer; queryPool: QueryPool; query: uint32) {.
+      cdecl, importc: "vkCmdEndQuery", dynlib: vulkandll.}
+  proc cmdResetQueryPool*(commandBuffer: CommandBuffer; queryPool: QueryPool;
+                         firstQuery: uint32; queryCount: uint32) {.cdecl,
+      importc: "vkCmdResetQueryPool", dynlib: vulkandll.}
+  proc cmdWriteTimestamp*(commandBuffer: CommandBuffer;
+                         pipelineStage: PipelineStageFlagBits;
+                         queryPool: QueryPool; query: uint32) {.cdecl,
+      importc: "vkCmdWriteTimestamp", dynlib: vulkandll.}
+  proc cmdCopyQueryPoolResults*(commandBuffer: CommandBuffer; queryPool: QueryPool;
+                               firstQuery: uint32; queryCount: uint32;
+                               dstBuffer: Buffer; dstOffset: DeviceSize;
+                               stride: DeviceSize; flags: QueryResultFlags) {.cdecl,
+      importc: "vkCmdCopyQueryPoolResults", dynlib: vulkandll.}
+  proc cmdPushConstants*(commandBuffer: CommandBuffer; layout: PipelineLayout;
+                        stageFlags: ShaderStageFlags; offset: uint32; size: uint32;
+                        pValues: pointer) {.cdecl, importc: "vkCmdPushConstants",
+      dynlib: vulkandll.}
+  proc cmdBeginRenderPass*(commandBuffer: CommandBuffer;
+                          pRenderPassBegin: ptr RenderPassBeginInfo;
+                          contents: SubpassContents) {.cdecl,
+      importc: "vkCmdBeginRenderPass", dynlib: vulkandll.}
+  proc cmdNextSubpass*(commandBuffer: CommandBuffer; contents: SubpassContents) {.
+      cdecl, importc: "vkCmdNextSubpass", dynlib: vulkandll.}
+  proc cmdEndRenderPass*(commandBuffer: CommandBuffer) {.cdecl,
+      importc: "vkCmdEndRenderPass", dynlib: vulkandll.}
+  proc cmdExecuteCommands*(commandBuffer: CommandBuffer;
+                          commandBufferCount: uint32;
+                          pCommandBuffers: ptr CommandBuffer) {.cdecl,
+      importc: "vkCmdExecuteCommands", dynlib: vulkandll.}
+const
+  KHR_surface* = 1
+  KHR_SURFACE_SPEC_VERSION* = 25
+  KHR_SURFACE_EXTENSION_NAME* = "VK_KHR_surface"
+
+
+type
+  ColorSpaceKHR* {.size: sizeof(cint).} = enum
+    SRGB_NONLINEAR_KHR = 0, DISPLAY_P3_NONLINEAR_EXT = 1000104001,
+    EXTENDED_SRGB_LINEAR_EXT = 1000104002, DCI_P3_LINEAR_EXT = 1000104003,
+    DCI_P3_NONLINEAR_EXT = 1000104004, BT709_LINEAR_EXT = 1000104005,
+    BT709_NONLINEAR_EXT = 1000104006, BT2020_LINEAR_EXT = 1000104007,
+    HDR10_ST2084_EXT = 1000104008, DOLBYVISION_EXT = 1000104009,
+    HDR10_HLG_EXT = 1000104010, ADOBERGB_LINEAR_EXT = 1000104011,
+    ADOBERGB_NONLINEAR_EXT = 1000104012, PASS_THROUGH_EXT = 1000104013
+  PresentModeKHR* {.size: sizeof(cint).} = enum
+    PRESENT_MODE_IMMEDIATE_KHR = 0, PRESENT_MODE_MAILBOX_KHR = 1,
+    PRESENT_MODE_FIFO_KHR = 2, PRESENT_MODE_FIFO_RELAXED_KHR = 3
+  SurfaceTransformFlagBitsKHR* {.size: sizeof(cint).} = enum
+    IDENTITY_BIT_KHR = 0x00000001, ROTATE_90_BIT_KHR = 0x00000002,
+    ROTATE_180_BIT_KHR = 0x00000004, ROTATE_270_BIT_KHR = 0x00000008,
+    HORIZONTAL_MIRROR_BIT_KHR = 0x00000010,
+    HORIZONTAL_MIRROR_ROTATE_90_BIT_KHR = 0x00000020,
+    HORIZONTAL_MIRROR_ROTATE_180_BIT_KHR = 0x00000040,
+    HORIZONTAL_MIRROR_ROTATE_270_BIT_KHR = 0x00000080,
+    SURFACE_TRANSFORM_INHERIT_BIT_KHR = 0x00000100
+  SurfaceTransformFlagsKHR* = Flags
+  CompositeAlphaFlagBitsKHR* {.size: sizeof(cint).} = enum
+    OPAQUE_BIT_KHR = 0x00000001, PRE_MULTIPLIED_BIT_KHR = 0x00000002,
+    POST_MULTIPLIED_BIT_KHR = 0x00000004,
+    COMPOSITE_ALPHA_INHERIT_BIT_KHR = 0x00000008
+  CompositeAlphaFlagsKHR* = Flags
+  SurfaceCapabilitiesKHR* = object
+    minImageCount*: uint32
+    maxImageCount*: uint32
+    currentExtent*: Extent2D
+    minImageExtent*: Extent2D
+    maxImageExtent*: Extent2D
+    maxImageArrayLayers*: uint32
+    supportedTransforms*: SurfaceTransformFlagsKHR
+    currentTransform*: SurfaceTransformFlagBitsKHR
+    supportedCompositeAlpha*: CompositeAlphaFlagsKHR
+    supportedUsageFlags*: ImageUsageFlags
+
+  SurfaceFormatKHR* = object
+    format*: Format
+    colorSpace*: ColorSpaceKHR
+
+  DestroySurfaceKHR* = proc (instance: Instance; surface: SurfaceKHR;
+                          pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  GetPhysicalDeviceSurfaceSupportKHR* = proc (physicalDevice: PhysicalDevice;
+      queueFamilyIndex: uint32; surface: SurfaceKHR; pSupported: ptr Bool32): Result {.
+      cdecl.}
+  GetPhysicalDeviceSurfaceCapabilitiesKHR* = proc (physicalDevice: PhysicalDevice;
+      surface: SurfaceKHR; pSurfaceCapabilities: ptr SurfaceCapabilitiesKHR): Result {.
+      cdecl.}
+  GetPhysicalDeviceSurfaceFormatsKHR* = proc (physicalDevice: PhysicalDevice;
+      surface: SurfaceKHR; pSurfaceFormatCount: ptr uint32;
+      pSurfaceFormats: ptr SurfaceFormatKHR): Result {.cdecl.}
+  GetPhysicalDeviceSurfacePresentModesKHR* = proc (physicalDevice: PhysicalDevice;
+      surface: SurfaceKHR; pPresentModeCount: ptr uint32;
+      pPresentModes: ptr PresentModeKHR): Result {.cdecl.}
+
+
+
+
+
+when not defined(NO_PROTOTYPES):
+  proc destroySurfaceKHR*(instance: Instance; surface: SurfaceKHR;
+                         pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroySurfaceKHR", dynlib: vulkandll.}
+  proc getPhysicalDeviceSurfaceSupportKHR*(physicalDevice: PhysicalDevice;
+      queueFamilyIndex: uint32; surface: SurfaceKHR; pSupported: ptr Bool32): Result {.
+      cdecl, importc: "vkGetPhysicalDeviceSurfaceSupportKHR", dynlib: vulkandll.}
+  proc getPhysicalDeviceSurfaceCapabilitiesKHR*(physicalDevice: PhysicalDevice;
+      surface: SurfaceKHR; pSurfaceCapabilities: ptr SurfaceCapabilitiesKHR): Result {.
+      cdecl, importc: "vkGetPhysicalDeviceSurfaceCapabilitiesKHR",
+      dynlib: vulkandll.}
+  proc getPhysicalDeviceSurfaceFormatsKHR*(physicalDevice: PhysicalDevice;
+      surface: SurfaceKHR; pSurfaceFormatCount: ptr uint32;
+      pSurfaceFormats: ptr SurfaceFormatKHR): Result {.cdecl,
+      importc: "vkGetPhysicalDeviceSurfaceFormatsKHR", dynlib: vulkandll.}
+  proc getPhysicalDeviceSurfacePresentModesKHR*(physicalDevice: PhysicalDevice;
+      surface: SurfaceKHR; pPresentModeCount: ptr uint32;
+      pPresentModes: ptr PresentModeKHR): Result {.cdecl,
+      importc: "vkGetPhysicalDeviceSurfacePresentModesKHR", dynlib: vulkandll.}
+const
+  KHR_swapchain* = 1
+  KHR_SWAPCHAIN_SPEC_VERSION* = 68
+  KHR_SWAPCHAIN_EXTENSION_NAME* = "VK_KHR_swapchain"
+
+type
+  SwapchainCreateFlagBitsKHR* {.size: sizeof(cint).} = enum
+    SWAPCHAIN_CREATE_BIND_SFR_BIT_KHX = 0x00000001
+  SwapchainCreateFlagsKHR* = Flags
+  SwapchainCreateInfoKHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: SwapchainCreateFlagsKHR
+    surface*: SurfaceKHR
+    minImageCount*: uint32
+    imageFormat*: Format
+    imageColorSpace*: ColorSpaceKHR
+    imageExtent*: Extent2D
+    imageArrayLayers*: uint32
+    imageUsage*: ImageUsageFlags
+    imageSharingMode*: SharingMode
+    queueFamilyIndexCount*: uint32
+    pQueueFamilyIndices*: ptr uint32
+    preTransform*: SurfaceTransformFlagBitsKHR
+    compositeAlpha*: CompositeAlphaFlagBitsKHR
+    presentMode*: PresentModeKHR
+    clipped*: Bool32
+    oldSwapchain*: SwapchainKHR
+
+  PresentInfoKHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    waitSemaphoreCount*: uint32
+    pWaitSemaphores*: ptr Semaphore
+    swapchainCount*: uint32
+    pSwapchains*: ptr SwapchainKHR
+    pImageIndices*: ptr uint32
+    pResults*: ptr Result
+
+  CreateSwapchainKHR* = proc (device: Device;
+                           pCreateInfo: ptr SwapchainCreateInfoKHR;
+                           pAllocator: ptr AllocationCallbacks;
+                           pSwapchain: ptr SwapchainKHR): Result {.cdecl.}
+  DestroySwapchainKHR* = proc (device: Device; swapchain: SwapchainKHR;
+                            pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  GetSwapchainImagesKHR* = proc (device: Device; swapchain: SwapchainKHR;
+                              pSwapchainImageCount: ptr uint32;
+                              pSwapchainImages: ptr Image): Result {.cdecl.}
+  AcquireNextImageKHR* = proc (device: Device; swapchain: SwapchainKHR;
+                            timeout: uint64; semaphore: Semaphore; fence: Fence;
+                            pImageIndex: ptr uint32): Result {.cdecl.}
+  QueuePresentKHR* = proc (queue: Queue; pPresentInfo: ptr PresentInfoKHR): Result {.
+      cdecl.}
+
+
+when not defined(NO_PROTOTYPES):
+  proc createSwapchainKHR*(device: Device; pCreateInfo: ptr SwapchainCreateInfoKHR;
+                          pAllocator: ptr AllocationCallbacks;
+                          pSwapchain: ptr SwapchainKHR): Result {.cdecl,
+      importc: "vkCreateSwapchainKHR", dynlib: vulkandll.}
+  proc destroySwapchainKHR*(device: Device; swapchain: SwapchainKHR;
+                           pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroySwapchainKHR", dynlib: vulkandll.}
+  proc getSwapchainImagesKHR*(device: Device; swapchain: SwapchainKHR;
+                             pSwapchainImageCount: ptr uint32;
+                             pSwapchainImages: ptr Image): Result {.cdecl,
+      importc: "vkGetSwapchainImagesKHR", dynlib: vulkandll.}
+  proc acquireNextImageKHR*(device: Device; swapchain: SwapchainKHR; timeout: uint64;
+                           semaphore: Semaphore; fence: Fence;
+                           pImageIndex: ptr uint32): Result {.cdecl,
+      importc: "vkAcquireNextImageKHR", dynlib: vulkandll.}
+  proc queuePresentKHR*(queue: Queue; pPresentInfo: ptr PresentInfoKHR): Result {.
+      cdecl, importc: "vkQueuePresentKHR", dynlib: vulkandll.}
+const
+  KHR_display* = 1
+  KHR_DISPLAY_SPEC_VERSION* = 21
+  KHR_DISPLAY_EXTENSION_NAME* = "VK_KHR_display"
+
+type
+  DisplayPlaneAlphaFlagBitsKHR* {.size: sizeof(cint).} = enum
+    DISPLAY_PLANE_ALPHA_OPAQUE_BIT_KHR = 0x00000001,
+    DISPLAY_PLANE_ALPHA_GLOBAL_BIT_KHR = 0x00000002,
+    DISPLAY_PLANE_ALPHA_PER_PIXEL_BIT_KHR = 0x00000004,
+    DISPLAY_PLANE_ALPHA_PER_PIXEL_PREMULTIPLIED_BIT_KHR = 0x00000008
+  DisplayPlaneAlphaFlagsKHR* = Flags
+  DisplayModeCreateFlagsKHR* = Flags
+  DisplaySurfaceCreateFlagsKHR* = Flags
+  DisplayPropertiesKHR* = object
+    display*: DisplayKHR
+    displayName*: cstring
+    physicalDimensions*: Extent2D
+    physicalResolution*: Extent2D
+    supportedTransforms*: SurfaceTransformFlagsKHR
+    planeReorderPossible*: Bool32
+    persistentContent*: Bool32
+
+  DisplayModeParametersKHR* = object
+    visibleRegion*: Extent2D
+    refreshRate*: uint32
+
+  DisplayModePropertiesKHR* = object
+    displayMode*: DisplayModeKHR
+    parameters*: DisplayModeParametersKHR
+
+  DisplayModeCreateInfoKHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: DisplayModeCreateFlagsKHR
+    parameters*: DisplayModeParametersKHR
+
+  DisplayPlaneCapabilitiesKHR* = object
+    supportedAlpha*: DisplayPlaneAlphaFlagsKHR
+    minSrcPosition*: Offset2D
+    maxSrcPosition*: Offset2D
+    minSrcExtent*: Extent2D
+    maxSrcExtent*: Extent2D
+    minDstPosition*: Offset2D
+    maxDstPosition*: Offset2D
+    minDstExtent*: Extent2D
+    maxDstExtent*: Extent2D
+
+  DisplayPlanePropertiesKHR* = object
+    currentDisplay*: DisplayKHR
+    currentStackIndex*: uint32
+
+  DisplaySurfaceCreateInfoKHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: DisplaySurfaceCreateFlagsKHR
+    displayMode*: DisplayModeKHR
+    planeIndex*: uint32
+    planeStackIndex*: uint32
+    transform*: SurfaceTransformFlagBitsKHR
+    globalAlpha*: cfloat
+    alphaMode*: DisplayPlaneAlphaFlagBitsKHR
+    imageExtent*: Extent2D
+
+  GetPhysicalDeviceDisplayPropertiesKHR* = proc (physicalDevice: PhysicalDevice;
+      pPropertyCount: ptr uint32; pProperties: ptr DisplayPropertiesKHR): Result {.
+      cdecl.}
+  GetPhysicalDeviceDisplayPlanePropertiesKHR* = proc (
+      physicalDevice: PhysicalDevice; pPropertyCount: ptr uint32;
+      pProperties: ptr DisplayPlanePropertiesKHR): Result {.cdecl.}
+  GetDisplayPlaneSupportedDisplaysKHR* = proc (physicalDevice: PhysicalDevice;
+      planeIndex: uint32; pDisplayCount: ptr uint32; pDisplays: ptr DisplayKHR): Result {.
+      cdecl.}
+  GetDisplayModePropertiesKHR* = proc (physicalDevice: PhysicalDevice;
+                                    display: DisplayKHR;
+                                    pPropertyCount: ptr uint32;
+                                    pProperties: ptr DisplayModePropertiesKHR): Result {.
+      cdecl.}
+  CreateDisplayModeKHR* = proc (physicalDevice: PhysicalDevice; display: DisplayKHR;
+                             pCreateInfo: ptr DisplayModeCreateInfoKHR;
+                             pAllocator: ptr AllocationCallbacks;
+                             pMode: ptr DisplayModeKHR): Result {.cdecl.}
+  GetDisplayPlaneCapabilitiesKHR* = proc (physicalDevice: PhysicalDevice;
+                                       mode: DisplayModeKHR; planeIndex: uint32;
+      pCapabilities: ptr DisplayPlaneCapabilitiesKHR): Result {.cdecl.}
+  CreateDisplayPlaneSurfaceKHR* = proc (instance: Instance; pCreateInfo: ptr DisplaySurfaceCreateInfoKHR;
+                                     pAllocator: ptr AllocationCallbacks;
+                                     pSurface: ptr SurfaceKHR): Result {.cdecl.}
+
+
+when not defined(NO_PROTOTYPES):
+  proc getPhysicalDeviceDisplayPropertiesKHR*(physicalDevice: PhysicalDevice;
+      pPropertyCount: ptr uint32; pProperties: ptr DisplayPropertiesKHR): Result {.
+      cdecl, importc: "vkGetPhysicalDeviceDisplayPropertiesKHR", dynlib: vulkandll.}
+  proc getPhysicalDeviceDisplayPlanePropertiesKHR*(
+      physicalDevice: PhysicalDevice; pPropertyCount: ptr uint32;
+      pProperties: ptr DisplayPlanePropertiesKHR): Result {.cdecl,
+      importc: "vkGetPhysicalDeviceDisplayPlanePropertiesKHR", dynlib: vulkandll.}
+  proc getDisplayPlaneSupportedDisplaysKHR*(physicalDevice: PhysicalDevice;
+      planeIndex: uint32; pDisplayCount: ptr uint32; pDisplays: ptr DisplayKHR): Result {.
+      cdecl, importc: "vkGetDisplayPlaneSupportedDisplaysKHR", dynlib: vulkandll.}
+  proc getDisplayModePropertiesKHR*(physicalDevice: PhysicalDevice;
+                                   display: DisplayKHR;
+                                   pPropertyCount: ptr uint32;
+                                   pProperties: ptr DisplayModePropertiesKHR): Result {.
+      cdecl, importc: "vkGetDisplayModePropertiesKHR", dynlib: vulkandll.}
+  proc createDisplayModeKHR*(physicalDevice: PhysicalDevice; display: DisplayKHR;
+                            pCreateInfo: ptr DisplayModeCreateInfoKHR;
+                            pAllocator: ptr AllocationCallbacks;
+                            pMode: ptr DisplayModeKHR): Result {.cdecl,
+      importc: "vkCreateDisplayModeKHR", dynlib: vulkandll.}
+  proc getDisplayPlaneCapabilitiesKHR*(physicalDevice: PhysicalDevice;
+                                      mode: DisplayModeKHR; planeIndex: uint32;
+      pCapabilities: ptr DisplayPlaneCapabilitiesKHR): Result {.cdecl,
+      importc: "vkGetDisplayPlaneCapabilitiesKHR", dynlib: vulkandll.}
+  proc createDisplayPlaneSurfaceKHR*(instance: Instance; pCreateInfo: ptr DisplaySurfaceCreateInfoKHR;
+                                    pAllocator: ptr AllocationCallbacks;
+                                    pSurface: ptr SurfaceKHR): Result {.cdecl,
+      importc: "vkCreateDisplayPlaneSurfaceKHR", dynlib: vulkandll.}
+const
+  KHR_display_swapchain* = 1
+  KHR_DISPLAY_SWAPCHAIN_SPEC_VERSION* = 9
+  KHR_DISPLAY_SWAPCHAIN_EXTENSION_NAME* = "VK_KHR_display_swapchain"
+
+type
+  DisplayPresentInfoKHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    srcRect*: Rect2D
+    dstRect*: Rect2D
+    persistent*: Bool32
+
+  CreateSharedSwapchainsKHR* = proc (device: Device; swapchainCount: uint32;
+                                  pCreateInfos: ptr SwapchainCreateInfoKHR;
+                                  pAllocator: ptr AllocationCallbacks;
+                                  pSwapchains: ptr SwapchainKHR): Result {.cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc createSharedSwapchainsKHR*(device: Device; swapchainCount: uint32;
+                                 pCreateInfos: ptr SwapchainCreateInfoKHR;
+                                 pAllocator: ptr AllocationCallbacks;
+                                 pSwapchains: ptr SwapchainKHR): Result {.cdecl,
+      importc: "vkCreateSharedSwapchainsKHR", dynlib: vulkandll.}
+when defined(USE_PLATFORM_XLIB_KHR):
+  const
+    KHR_xlib_surface* = 1
+  const
+    KHR_XLIB_SURFACE_SPEC_VERSION* = 6
+    KHR_XLIB_SURFACE_EXTENSION_NAME* = "VK_KHR_xlib_surface"
+  type
+    XlibSurfaceCreateFlagsKHR* = Flags
+    XlibSurfaceCreateInfoKHR* = object
+      sType*: StructureType
+      pNext*: pointer
+      flags*: XlibSurfaceCreateFlagsKHR
+      dpy*: ptr Display
+      window*: Window
+
+    CreateXlibSurfaceKHR* = proc (instance: Instance;
+                               pCreateInfo: ptr XlibSurfaceCreateInfoKHR;
+                               pAllocator: ptr AllocationCallbacks;
+                               pSurface: ptr SurfaceKHR): Result {.cdecl.}
+    GetPhysicalDeviceXlibPresentationSupportKHR* = proc (
+        physicalDevice: PhysicalDevice; queueFamilyIndex: uint32; dpy: ptr Display;
+        visualID: VisualID): Bool32 {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc createXlibSurfaceKHR*(instance: Instance;
+                              pCreateInfo: ptr XlibSurfaceCreateInfoKHR;
+                              pAllocator: ptr AllocationCallbacks;
+                              pSurface: ptr SurfaceKHR): Result {.cdecl,
+        importc: "vkCreateXlibSurfaceKHR", dynlib: vulkandll.}
+    proc getPhysicalDeviceXlibPresentationSupportKHR*(
+        physicalDevice: PhysicalDevice; queueFamilyIndex: uint32; dpy: ptr Display;
+        visualID: VisualID): Bool32 {.cdecl, importc: "vkGetPhysicalDeviceXlibPresentationSupportKHR",
+                                   dynlib: vulkandll.}
+when defined(USE_PLATFORM_XCB_KHR):
+  const
+    KHR_xcb_surface* = 1
+  const
+    KHR_XCB_SURFACE_SPEC_VERSION* = 6
+    KHR_XCB_SURFACE_EXTENSION_NAME* = "VK_KHR_xcb_surface"
+  type
+    XcbSurfaceCreateFlagsKHR* = Flags
+    XcbSurfaceCreateInfoKHR* = object
+      sType*: StructureType
+      pNext*: pointer
+      flags*: XcbSurfaceCreateFlagsKHR
+      connection*: ptr xcb_connection_t
+      window*: xcb_window_t
+
+    CreateXcbSurfaceKHR* = proc (instance: Instance;
+                              pCreateInfo: ptr XcbSurfaceCreateInfoKHR;
+                              pAllocator: ptr AllocationCallbacks;
+                              pSurface: ptr SurfaceKHR): Result {.cdecl.}
+    GetPhysicalDeviceXcbPresentationSupportKHR* = proc (
+        physicalDevice: PhysicalDevice; queueFamilyIndex: uint32;
+        connection: ptr xcb_connection_t; visual_id: xcb_visualid_t): Bool32 {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc createXcbSurfaceKHR*(instance: Instance;
+                             pCreateInfo: ptr XcbSurfaceCreateInfoKHR;
+                             pAllocator: ptr AllocationCallbacks;
+                             pSurface: ptr SurfaceKHR): Result {.cdecl,
+        importc: "vkCreateXcbSurfaceKHR", dynlib: vulkandll.}
+    proc getPhysicalDeviceXcbPresentationSupportKHR*(
+        physicalDevice: PhysicalDevice; queueFamilyIndex: uint32;
+        connection: ptr xcb_connection_t; visual_id: xcb_visualid_t): Bool32 {.cdecl,
+        importc: "vkGetPhysicalDeviceXcbPresentationSupportKHR", dynlib: vulkandll.}
+when defined(USE_PLATFORM_WAYLAND_KHR):
+  const
+    KHR_wayland_surface* = 1
+  const
+    KHR_WAYLAND_SURFACE_SPEC_VERSION* = 6
+    KHR_WAYLAND_SURFACE_EXTENSION_NAME* = "VK_KHR_wayland_surface"
+  type
+    WaylandSurfaceCreateFlagsKHR* = Flags
+    WaylandSurfaceCreateInfoKHR* = object
+      sType*: StructureType
+      pNext*: pointer
+      flags*: WaylandSurfaceCreateFlagsKHR
+      display*: ptr wl_display
+      surface*: ptr wl_surface
+
+    CreateWaylandSurfaceKHR* = proc (instance: Instance;
+                                  pCreateInfo: ptr WaylandSurfaceCreateInfoKHR;
+                                  pAllocator: ptr AllocationCallbacks;
+                                  pSurface: ptr SurfaceKHR): Result {.cdecl.}
+    GetPhysicalDeviceWaylandPresentationSupportKHR* = proc (
+        physicalDevice: PhysicalDevice; queueFamilyIndex: uint32;
+        display: ptr wl_display): Bool32 {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc createWaylandSurfaceKHR*(instance: Instance;
+                                 pCreateInfo: ptr WaylandSurfaceCreateInfoKHR;
+                                 pAllocator: ptr AllocationCallbacks;
+                                 pSurface: ptr SurfaceKHR): Result {.cdecl,
+        importc: "vkCreateWaylandSurfaceKHR", dynlib: vulkandll.}
+    proc getPhysicalDeviceWaylandPresentationSupportKHR*(
+        physicalDevice: PhysicalDevice; queueFamilyIndex: uint32;
+        display: ptr wl_display): Bool32 {.cdecl, importc: "vkGetPhysicalDeviceWaylandPresentationSupportKHR",
+                                       dynlib: vulkandll.}
+when defined(USE_PLATFORM_MIR_KHR):
+  const
+    KHR_mir_surface* = 1
+  const
+    KHR_MIR_SURFACE_SPEC_VERSION* = 4
+    KHR_MIR_SURFACE_EXTENSION_NAME* = "VK_KHR_mir_surface"
+  type
+    MirSurfaceCreateFlagsKHR* = Flags
+    MirSurfaceCreateInfoKHR* = object
+      sType*: StructureType
+      pNext*: pointer
+      flags*: MirSurfaceCreateFlagsKHR
+      connection*: ptr MirConnection
+      mirSurface*: ptr MirSurface
+
+    CreateMirSurfaceKHR* = proc (instance: Instance;
+                              pCreateInfo: ptr MirSurfaceCreateInfoKHR;
+                              pAllocator: ptr AllocationCallbacks;
+                              pSurface: ptr SurfaceKHR): Result {.cdecl.}
+    GetPhysicalDeviceMirPresentationSupportKHR* = proc (
+        physicalDevice: PhysicalDevice; queueFamilyIndex: uint32;
+        connection: ptr MirConnection): Bool32 {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc createMirSurfaceKHR*(instance: Instance;
+                             pCreateInfo: ptr MirSurfaceCreateInfoKHR;
+                             pAllocator: ptr AllocationCallbacks;
+                             pSurface: ptr SurfaceKHR): Result {.cdecl,
+        importc: "vkCreateMirSurfaceKHR", dynlib: vulkandll.}
+    proc getPhysicalDeviceMirPresentationSupportKHR*(
+        physicalDevice: PhysicalDevice; queueFamilyIndex: uint32;
+        connection: ptr MirConnection): Bool32 {.cdecl,
+        importc: "vkGetPhysicalDeviceMirPresentationSupportKHR", dynlib: vulkandll.}
+when defined(USE_PLATFORM_ANDROID_KHR):
+  const
+    KHR_android_surface* = 1
+  const
+    KHR_ANDROID_SURFACE_SPEC_VERSION* = 6
+    KHR_ANDROID_SURFACE_EXTENSION_NAME* = "VK_KHR_android_surface"
+  type
+    AndroidSurfaceCreateFlagsKHR* = Flags
+    AndroidSurfaceCreateInfoKHR* = object
+      sType*: StructureType
+      pNext*: pointer
+      flags*: AndroidSurfaceCreateFlagsKHR
+      window*: ptr ANativeWindow
+
+    CreateAndroidSurfaceKHR* = proc (instance: Instance;
+                                  pCreateInfo: ptr AndroidSurfaceCreateInfoKHR;
+                                  pAllocator: ptr AllocationCallbacks;
+                                  pSurface: ptr SurfaceKHR): Result {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc createAndroidSurfaceKHR*(instance: Instance;
+                                 pCreateInfo: ptr AndroidSurfaceCreateInfoKHR;
+                                 pAllocator: ptr AllocationCallbacks;
+                                 pSurface: ptr SurfaceKHR): Result {.cdecl,
+        importc: "vkCreateAndroidSurfaceKHR", dynlib: vulkandll.}
+when defined(USE_PLATFORM_WIN32_KHR):
+  const
+    KHR_win32_surface* = 1
+  const
+    KHR_WIN32_SURFACE_SPEC_VERSION* = 5
+    KHR_WIN32_SURFACE_EXTENSION_NAME* = "VK_KHR_win32_surface"
+  type
+    Win32SurfaceCreateFlagsKHR* = Flags
+    Win32SurfaceCreateInfoKHR* = object
+      sType*: StructureType
+      pNext*: pointer
+      flags*: Win32SurfaceCreateFlagsKHR
+      hinstance*: HINSTANCE
+      hwnd*: HWND
+
+    CreateWin32SurfaceKHR* = proc (instance: Instance;
+                                pCreateInfo: ptr Win32SurfaceCreateInfoKHR;
+                                pAllocator: ptr AllocationCallbacks;
+                                pSurface: ptr SurfaceKHR): Result {.cdecl.}
+    GetPhysicalDeviceWin32PresentationSupportKHR* = proc (
+        physicalDevice: PhysicalDevice; queueFamilyIndex: uint32): Bool32 {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc createWin32SurfaceKHR*(instance: Instance;
+                               pCreateInfo: ptr Win32SurfaceCreateInfoKHR;
+                               pAllocator: ptr AllocationCallbacks;
+                               pSurface: ptr SurfaceKHR): Result {.cdecl,
+        importc: "vkCreateWin32SurfaceKHR", dynlib: vulkandll.}
+    proc getPhysicalDeviceWin32PresentationSupportKHR*(
+        physicalDevice: PhysicalDevice; queueFamilyIndex: uint32): Bool32 {.cdecl,
+        importc: "vkGetPhysicalDeviceWin32PresentationSupportKHR",
+        dynlib: vulkandll.}
+const
+  KHR_sampler_mirror_clamp_to_edge* = 1
+  KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_SPEC_VERSION* = 1
+  KHR_SAMPLER_MIRROR_CLAMP_TO_EDGE_EXTENSION_NAME* = "VK_KHR_sampler_mirror_clamp_to_edge"
+  KHR_get_physical_device_properties2* = 1
+  KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_SPEC_VERSION* = 1
+  KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME* = "VK_KHR_get_physical_device_properties2"
+
+type
+  PhysicalDeviceFeatures2KHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    features*: PhysicalDeviceFeatures
+
+  PhysicalDeviceProperties2KHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    properties*: PhysicalDeviceProperties
+
+  FormatProperties2KHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    formatProperties*: FormatProperties
+
+  ImageFormatProperties2KHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    imageFormatProperties*: ImageFormatProperties
+
+  PhysicalDeviceImageFormatInfo2KHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    format*: Format
+    `type`*: ImageType
+    tiling*: ImageTiling
+    usage*: ImageUsageFlags
+    flags*: ImageCreateFlags
+
+  QueueFamilyProperties2KHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    queueFamilyProperties*: QueueFamilyProperties
+
+  PhysicalDeviceMemoryProperties2KHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    memoryProperties*: PhysicalDeviceMemoryProperties
+
+  SparseImageFormatProperties2KHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    properties*: SparseImageFormatProperties
+
+  PhysicalDeviceSparseImageFormatInfo2KHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    format*: Format
+    `type`*: ImageType
+    samples*: SampleCountFlagBits
+    usage*: ImageUsageFlags
+    tiling*: ImageTiling
+
+  GetPhysicalDeviceFeatures2KHR* = proc (physicalDevice: PhysicalDevice;
+                                      pFeatures: ptr PhysicalDeviceFeatures2KHR) {.
+      cdecl.}
+  GetPhysicalDeviceProperties2KHR* = proc (physicalDevice: PhysicalDevice;
+      pProperties: ptr PhysicalDeviceProperties2KHR) {.cdecl.}
+  GetPhysicalDeviceFormatProperties2KHR* = proc (physicalDevice: PhysicalDevice;
+      format: Format; pFormatProperties: ptr FormatProperties2KHR) {.cdecl.}
+  GetPhysicalDeviceImageFormatProperties2KHR* = proc (
+      physicalDevice: PhysicalDevice;
+      pImageFormatInfo: ptr PhysicalDeviceImageFormatInfo2KHR;
+      pImageFormatProperties: ptr ImageFormatProperties2KHR): Result {.cdecl.}
+  GetPhysicalDeviceQueueFamilyProperties2KHR* = proc (
+      physicalDevice: PhysicalDevice; pQueueFamilyPropertyCount: ptr uint32;
+      pQueueFamilyProperties: ptr QueueFamilyProperties2KHR) {.cdecl.}
+  GetPhysicalDeviceMemoryProperties2KHR* = proc (physicalDevice: PhysicalDevice;
+      pMemoryProperties: ptr PhysicalDeviceMemoryProperties2KHR) {.cdecl.}
+  GetPhysicalDeviceSparseImageFormatProperties2KHR* = proc (
+      physicalDevice: PhysicalDevice;
+      pFormatInfo: ptr PhysicalDeviceSparseImageFormatInfo2KHR;
+      pPropertyCount: ptr uint32; pProperties: ptr SparseImageFormatProperties2KHR) {.
+      cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc getPhysicalDeviceFeatures2KHR*(physicalDevice: PhysicalDevice;
+                                     pFeatures: ptr PhysicalDeviceFeatures2KHR) {.
+      cdecl, importc: "vkGetPhysicalDeviceFeatures2KHR", dynlib: vulkandll.}
+  proc getPhysicalDeviceProperties2KHR*(physicalDevice: PhysicalDevice; pProperties: ptr PhysicalDeviceProperties2KHR) {.
+      cdecl, importc: "vkGetPhysicalDeviceProperties2KHR", dynlib: vulkandll.}
+  proc getPhysicalDeviceFormatProperties2KHR*(physicalDevice: PhysicalDevice;
+      format: Format; pFormatProperties: ptr FormatProperties2KHR) {.cdecl,
+      importc: "vkGetPhysicalDeviceFormatProperties2KHR", dynlib: vulkandll.}
+  proc getPhysicalDeviceImageFormatProperties2KHR*(
+      physicalDevice: PhysicalDevice;
+      pImageFormatInfo: ptr PhysicalDeviceImageFormatInfo2KHR;
+      pImageFormatProperties: ptr ImageFormatProperties2KHR): Result {.cdecl,
+      importc: "vkGetPhysicalDeviceImageFormatProperties2KHR", dynlib: vulkandll.}
+  proc getPhysicalDeviceQueueFamilyProperties2KHR*(
+      physicalDevice: PhysicalDevice; pQueueFamilyPropertyCount: ptr uint32;
+      pQueueFamilyProperties: ptr QueueFamilyProperties2KHR) {.cdecl,
+      importc: "vkGetPhysicalDeviceQueueFamilyProperties2KHR", dynlib: vulkandll.}
+  proc getPhysicalDeviceMemoryProperties2KHR*(physicalDevice: PhysicalDevice;
+      pMemoryProperties: ptr PhysicalDeviceMemoryProperties2KHR) {.cdecl,
+      importc: "vkGetPhysicalDeviceMemoryProperties2KHR", dynlib: vulkandll.}
+  proc getPhysicalDeviceSparseImageFormatProperties2KHR*(
+      physicalDevice: PhysicalDevice;
+      pFormatInfo: ptr PhysicalDeviceSparseImageFormatInfo2KHR;
+      pPropertyCount: ptr uint32; pProperties: ptr SparseImageFormatProperties2KHR) {.
+      cdecl, importc: "vkGetPhysicalDeviceSparseImageFormatProperties2KHR",
+      dynlib: vulkandll.}
+const
+  KHR_shader_draw_parameters* = 1
+  KHR_SHADER_DRAW_PARAMETERS_SPEC_VERSION* = 1
+  KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME* = "VK_KHR_shader_draw_parameters"
+  KHR_maintenance1* = 1
+  KHR_MAINTENANCE1_SPEC_VERSION* = 1
+  KHR_MAINTENANCE1_EXTENSION_NAME* = "VK_KHR_maintenance1"
+
+type
+  CommandPoolTrimFlagsKHR* = Flags
+  TrimCommandPoolKHR* = proc (device: Device; commandPool: CommandPool;
+                           flags: CommandPoolTrimFlagsKHR) {.cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc trimCommandPoolKHR*(device: Device; commandPool: CommandPool;
+                          flags: CommandPoolTrimFlagsKHR) {.cdecl,
+      importc: "vkTrimCommandPoolKHR", dynlib: vulkandll.}
+const
+  KHR_push_descriptor* = 1
+  KHR_PUSH_DESCRIPTOR_SPEC_VERSION* = 1
+  KHR_PUSH_DESCRIPTOR_EXTENSION_NAME* = "VK_KHR_push_descriptor"
+
+type
+  PhysicalDevicePushDescriptorPropertiesKHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    maxPushDescriptors*: uint32
+
+  CmdPushDescriptorSetKHR* = proc (commandBuffer: CommandBuffer;
+                                pipelineBindPoint: PipelineBindPoint;
+                                layout: PipelineLayout; set: uint32;
+                                descriptorWriteCount: uint32;
+                                pDescriptorWrites: ptr WriteDescriptorSet) {.cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc cmdPushDescriptorSetKHR*(commandBuffer: CommandBuffer;
+                               pipelineBindPoint: PipelineBindPoint;
+                               layout: PipelineLayout; set: uint32;
+                               descriptorWriteCount: uint32;
+                               pDescriptorWrites: ptr WriteDescriptorSet) {.cdecl,
+      importc: "vkCmdPushDescriptorSetKHR", dynlib: vulkandll.}
+const
+  KHR_incremental_present* = 1
+  KHR_INCREMENTAL_PRESENT_SPEC_VERSION* = 1
+  KHR_INCREMENTAL_PRESENT_EXTENSION_NAME* = "VK_KHR_incremental_present"
+
+type
+  RectLayerKHR* = object
+    offset*: Offset2D
+    extent*: Extent2D
+    layer*: uint32
+
+  PresentRegionKHR* = object
+    rectangleCount*: uint32
+    pRectangles*: ptr RectLayerKHR
+
+  PresentRegionsKHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    swapchainCount*: uint32
+    pRegions*: ptr PresentRegionKHR
+
+
+const
+  KHR_descriptor_update_template* = 1
+  KHR_DESCRIPTOR_UPDATE_TEMPLATE_SPEC_VERSION* = 1
+  KHR_DESCRIPTOR_UPDATE_TEMPLATE_EXTENSION_NAME* = "VK_KHR_descriptor_update_template"
+
+type
+  DescriptorUpdateTemplateTypeKHR* {.size: sizeof(cint).} = enum
+    DESCRIPTOR_UPDATE_TEMPLATE_TYPE_DESCRIPTOR_SET_KHR = 0,
+    DESCRIPTOR_UPDATE_TEMPLATE_TYPE_PUSH_DESCRIPTORS_KHR = 1
+  DescriptorUpdateTemplateCreateFlagsKHR* = Flags
+  DescriptorUpdateTemplateEntryKHR* = object
+    dstBinding*: uint32
+    dstArrayElement*: uint32
+    descriptorCount*: uint32
+    descriptorType*: DescriptorType
+    offset*: csize
+    stride*: csize
+
+  DescriptorUpdateTemplateCreateInfoKHR* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: DescriptorUpdateTemplateCreateFlagsKHR
+    descriptorUpdateEntryCount*: uint32
+    pDescriptorUpdateEntries*: ptr DescriptorUpdateTemplateEntryKHR
+    templateType*: DescriptorUpdateTemplateTypeKHR
+    descriptorSetLayout*: DescriptorSetLayout
+    pipelineBindPoint*: PipelineBindPoint
+    pipelineLayout*: PipelineLayout
+    set*: uint32
+
+  CreateDescriptorUpdateTemplateKHR* = proc (device: Device;
+      pCreateInfo: ptr DescriptorUpdateTemplateCreateInfoKHR;
+      pAllocator: ptr AllocationCallbacks;
+      pDescriptorUpdateTemplate: ptr DescriptorUpdateTemplateKHR): Result {.cdecl.}
+  DestroyDescriptorUpdateTemplateKHR* = proc (device: Device;
+      descriptorUpdateTemplate: DescriptorUpdateTemplateKHR;
+      pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  UpdateDescriptorSetWithTemplateKHR* = proc (device: Device;
+      descriptorSet: DescriptorSet;
+      descriptorUpdateTemplate: DescriptorUpdateTemplateKHR; pData: pointer) {.cdecl.}
+  CmdPushDescriptorSetWithTemplateKHR* = proc (commandBuffer: CommandBuffer;
+      descriptorUpdateTemplate: DescriptorUpdateTemplateKHR;
+      layout: PipelineLayout; set: uint32; pData: pointer) {.cdecl.}
+
+
+when not defined(NO_PROTOTYPES):
+  proc createDescriptorUpdateTemplateKHR*(device: Device;
+      pCreateInfo: ptr DescriptorUpdateTemplateCreateInfoKHR;
+      pAllocator: ptr AllocationCallbacks;
+      pDescriptorUpdateTemplate: ptr DescriptorUpdateTemplateKHR): Result {.cdecl,
+      importc: "vkCreateDescriptorUpdateTemplateKHR", dynlib: vulkandll.}
+  proc destroyDescriptorUpdateTemplateKHR*(device: Device;
+      descriptorUpdateTemplate: DescriptorUpdateTemplateKHR;
+      pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyDescriptorUpdateTemplateKHR", dynlib: vulkandll.}
+  proc updateDescriptorSetWithTemplateKHR*(device: Device;
+      descriptorSet: DescriptorSet;
+      descriptorUpdateTemplate: DescriptorUpdateTemplateKHR; pData: pointer) {.
+      cdecl, importc: "vkUpdateDescriptorSetWithTemplateKHR", dynlib: vulkandll.}
+  proc cmdPushDescriptorSetWithTemplateKHR*(commandBuffer: CommandBuffer;
+      descriptorUpdateTemplate: DescriptorUpdateTemplateKHR;
+      layout: PipelineLayout; set: uint32; pData: pointer) {.cdecl,
+      importc: "vkCmdPushDescriptorSetWithTemplateKHR", dynlib: vulkandll.}
+const
+  EXT_debug_report* = 1
+  EXT_DEBUG_REPORT_SPEC_VERSION* = 6
+  EXT_DEBUG_REPORT_EXTENSION_NAME* = "VK_EXT_debug_report"
+  STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT* = STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT
+
+type
+  DebugReportObjectTypeEXT* {.size: sizeof(cint).} = enum
+    UNKNOWN_EXT = 0, INSTANCE_EXT = 1, PHYSICAL_DEVICE_EXT = 2, DEVICE_EXT = 3,
+    QUEUE_EXT = 4, SEMAPHORE_EXT = 5, COMMAND_BUFFER_EXT = 6, FENCE_EXT = 7,
+    DEVICE_MEMORY_EXT = 8, BUFFER_EXT = 9, IMAGE_EXT = 10, EVENT_EXT = 11,
+    QUERY_POOL_EXT = 12, BUFFER_VIEW_EXT = 13, IMAGE_VIEW_EXT = 14,
+    SHADER_MODULE_EXT = 15, PIPELINE_CACHE_EXT = 16, PIPELINE_LAYOUT_EXT = 17,
+    RENDER_PASS_EXT = 18, PIPELINE_EXT = 19, DESCRIPTOR_SET_LAYOUT_EXT = 20,
+    SAMPLER_EXT = 21, DESCRIPTOR_POOL_EXT = 22, DESCRIPTOR_SET_EXT = 23,
+    FRAMEBUFFER_EXT = 24, COMMAND_POOL_EXT = 25, SURFACE_KHR_EXT = 26,
+    SWAPCHAIN_KHR_EXT = 27, DEBUG_REPORT_EXT = 28, DISPLAY_KHR_EXT = 29,
+    DISPLAY_MODE_KHR_EXT = 30, OBJECT_TABLE_NVX_EXT = 31,
+    INDIRECT_COMMANDS_LAYOUT_NVX_EXT = 32,
+    DESCRIPTOR_UPDATE_TEMPLATE_KHR_EXT = 1000085000
+  DebugReportErrorEXT* {.size: sizeof(cint).} = enum
+    DEBUG_REPORT_ERROR_NONE_EXT = 0, DEBUG_REPORT_ERROR_CALLBACK_REF_EXT = 1
+  DebugReportFlagBitsEXT* {.size: sizeof(cint).} = enum
+    DEBUG_REPORT_INFORMATION_BIT_EXT = 0x00000001,
+    DEBUG_REPORT_WARNING_BIT_EXT = 0x00000002,
+    DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT = 0x00000004,
+    DEBUG_REPORT_ERROR_BIT_EXT = 0x00000008,
+    DEBUG_REPORT_DEBUG_BIT_EXT = 0x00000010
+  DebugReportFlagsEXT* = Flags
+  FnDebugReportCallbackEXT* = proc (flags: DebugReportFlagsEXT;
+                                 objectType: DebugReportObjectTypeEXT;
+                                 `object`: uint64; location: csize;
+                                 messageCode: int32; pLayerPrefix: cstring;
+                                 pMessage: cstring; pUserData: pointer): Bool32 {.
+      cdecl.}
+  DebugReportCallbackCreateInfoEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: DebugReportFlagsEXT
+    pfnCallback*: FnDebugReportCallbackEXT
+    pUserData*: pointer
+
+  CreateDebugReportCallbackEXT* = proc (instance: Instance; pCreateInfo: ptr DebugReportCallbackCreateInfoEXT;
+                                     pAllocator: ptr AllocationCallbacks;
+                                     pCallback: ptr DebugReportCallbackEXT): Result {.
+      cdecl.}
+  DestroyDebugReportCallbackEXT* = proc (instance: Instance;
+                                      callback: DebugReportCallbackEXT;
+                                      pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  DebugReportMessageEXT* = proc (instance: Instance; flags: DebugReportFlagsEXT;
+                              objectType: DebugReportObjectTypeEXT;
+                              `object`: uint64; location: csize; messageCode: int32;
+                              pLayerPrefix: cstring; pMessage: cstring) {.cdecl.}
+
+
+
+
+when not defined(NO_PROTOTYPES):
+  proc createDebugReportCallbackEXT*(instance: Instance; pCreateInfo: ptr DebugReportCallbackCreateInfoEXT;
+                                    pAllocator: ptr AllocationCallbacks;
+                                    pCallback: ptr DebugReportCallbackEXT): Result {.
+      cdecl, importc: "vkCreateDebugReportCallbackEXT", dynlib: vulkandll.}
+  proc destroyDebugReportCallbackEXT*(instance: Instance;
+                                     callback: DebugReportCallbackEXT;
+                                     pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyDebugReportCallbackEXT", dynlib: vulkandll.}
+  proc debugReportMessageEXT*(instance: Instance; flags: DebugReportFlagsEXT;
+                             objectType: DebugReportObjectTypeEXT;
+                             `object`: uint64; location: csize; messageCode: int32;
+                             pLayerPrefix: cstring; pMessage: cstring) {.cdecl,
+      importc: "vkDebugReportMessageEXT", dynlib: vulkandll.}
+const
+  NV_glsl_shader* = 1
+  NV_GLSL_SHADER_SPEC_VERSION* = 1
+  NV_GLSL_SHADER_EXTENSION_NAME* = "VK_NV_glsl_shader"
+  IMG_filter_cubic* = 1
+  IMG_FILTER_CUBIC_SPEC_VERSION* = 1
+  IMG_FILTER_CUBIC_EXTENSION_NAME* = "VK_IMG_filter_cubic"
+  AMD_rasterization_order* = 1
+  AMD_RASTERIZATION_ORDER_SPEC_VERSION* = 1
+  AMD_RASTERIZATION_ORDER_EXTENSION_NAME* = "VK_AMD_rasterization_order"
+
+type
+  RasterizationOrderAMD* {.size: sizeof(cint).} = enum
+    RASTERIZATION_ORDER_STRICT_AMD = 0, RASTERIZATION_ORDER_RELAXED_AMD = 1
+  PipelineRasterizationStateRasterizationOrderAMD* = object
+    sType*: StructureType
+    pNext*: pointer
+    rasterizationOrder*: RasterizationOrderAMD
+
+
+
+const
+  AMD_shader_trinary_minmax* = 1
+  AMD_SHADER_TRINARY_MINMAX_SPEC_VERSION* = 1
+  AMD_SHADER_TRINARY_MINMAX_EXTENSION_NAME* = "VK_AMD_shader_trinary_minmax"
+  AMD_shader_explicit_vertex_parameter* = 1
+  AMD_SHADER_EXPLICIT_VERTEX_PARAMETER_SPEC_VERSION* = 1
+  AMD_SHADER_EXPLICIT_VERTEX_PARAMETER_EXTENSION_NAME* = "VK_AMD_shader_explicit_vertex_parameter"
+  EXT_debug_marker* = 1
+  EXT_DEBUG_MARKER_SPEC_VERSION* = 4
+  EXT_DEBUG_MARKER_EXTENSION_NAME* = "VK_EXT_debug_marker"
+
+type
+  DebugMarkerObjectNameInfoEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    objectType*: DebugReportObjectTypeEXT
+    `object`*: uint64
+    pObjectName*: cstring
+
+  DebugMarkerObjectTagInfoEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    objectType*: DebugReportObjectTypeEXT
+    `object`*: uint64
+    tagName*: uint64
+    tagSize*: csize
+    pTag*: pointer
+
+  DebugMarkerMarkerInfoEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    pMarkerName*: cstring
+    color*: array[4, cfloat]
+
+  DebugMarkerSetObjectTagEXT* = proc (device: Device;
+                                   pTagInfo: ptr DebugMarkerObjectTagInfoEXT): Result {.
+      cdecl.}
+  DebugMarkerSetObjectNameEXT* = proc (device: Device;
+                                    pNameInfo: ptr DebugMarkerObjectNameInfoEXT): Result {.
+      cdecl.}
+  CmdDebugMarkerBeginEXT* = proc (commandBuffer: CommandBuffer;
+                               pMarkerInfo: ptr DebugMarkerMarkerInfoEXT) {.cdecl.}
+  CmdDebugMarkerEndEXT* = proc (commandBuffer: CommandBuffer) {.cdecl.}
+  CmdDebugMarkerInsertEXT* = proc (commandBuffer: CommandBuffer;
+                                pMarkerInfo: ptr DebugMarkerMarkerInfoEXT) {.cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc debugMarkerSetObjectTagEXT*(device: Device;
+                                  pTagInfo: ptr DebugMarkerObjectTagInfoEXT): Result {.
+      cdecl, importc: "vkDebugMarkerSetObjectTagEXT", dynlib: vulkandll.}
+  proc debugMarkerSetObjectNameEXT*(device: Device;
+                                   pNameInfo: ptr DebugMarkerObjectNameInfoEXT): Result {.
+      cdecl, importc: "vkDebugMarkerSetObjectNameEXT", dynlib: vulkandll.}
+  proc cmdDebugMarkerBeginEXT*(commandBuffer: CommandBuffer;
+                              pMarkerInfo: ptr DebugMarkerMarkerInfoEXT) {.cdecl,
+      importc: "vkCmdDebugMarkerBeginEXT", dynlib: vulkandll.}
+  proc cmdDebugMarkerEndEXT*(commandBuffer: CommandBuffer) {.cdecl,
+      importc: "vkCmdDebugMarkerEndEXT", dynlib: vulkandll.}
+  proc cmdDebugMarkerInsertEXT*(commandBuffer: CommandBuffer;
+                               pMarkerInfo: ptr DebugMarkerMarkerInfoEXT) {.cdecl,
+      importc: "vkCmdDebugMarkerInsertEXT", dynlib: vulkandll.}
+const
+  AMD_gcn_shader* = 1
+  AMD_GCN_SHADER_SPEC_VERSION* = 1
+  AMD_GCN_SHADER_EXTENSION_NAME* = "VK_AMD_gcn_shader"
+  NV_dedicated_allocation* = 1
+  NV_DEDICATED_ALLOCATION_SPEC_VERSION* = 1
+  NV_DEDICATED_ALLOCATION_EXTENSION_NAME* = "VK_NV_dedicated_allocation"
+
+type
+  DedicatedAllocationImageCreateInfoNV* = object
+    sType*: StructureType
+    pNext*: pointer
+    dedicatedAllocation*: Bool32
+
+  DedicatedAllocationBufferCreateInfoNV* = object
+    sType*: StructureType
+    pNext*: pointer
+    dedicatedAllocation*: Bool32
+
+  DedicatedAllocationMemoryAllocateInfoNV* = object
+    sType*: StructureType
+    pNext*: pointer
+    image*: Image
+    buffer*: Buffer
+
+
+const
+  AMD_draw_indirect_count* = 1
+  AMD_DRAW_INDIRECT_COUNT_SPEC_VERSION* = 1
+  AMD_DRAW_INDIRECT_COUNT_EXTENSION_NAME* = "VK_AMD_draw_indirect_count"
+
+type
+  CmdDrawIndirectCountAMD* = proc (commandBuffer: CommandBuffer; buffer: Buffer;
+                                offset: DeviceSize; countBuffer: Buffer;
+                                countBufferOffset: DeviceSize;
+                                maxDrawCount: uint32; stride: uint32) {.cdecl.}
+  CmdDrawIndexedIndirectCountAMD* = proc (commandBuffer: CommandBuffer;
+                                       buffer: Buffer; offset: DeviceSize;
+                                       countBuffer: Buffer;
+                                       countBufferOffset: DeviceSize;
+                                       maxDrawCount: uint32; stride: uint32) {.cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc cmdDrawIndirectCountAMD*(commandBuffer: CommandBuffer; buffer: Buffer;
+                               offset: DeviceSize; countBuffer: Buffer;
+                               countBufferOffset: DeviceSize;
+                               maxDrawCount: uint32; stride: uint32) {.cdecl,
+      importc: "vkCmdDrawIndirectCountAMD", dynlib: vulkandll.}
+  proc cmdDrawIndexedIndirectCountAMD*(commandBuffer: CommandBuffer;
+                                      buffer: Buffer; offset: DeviceSize;
+                                      countBuffer: Buffer;
+                                      countBufferOffset: DeviceSize;
+                                      maxDrawCount: uint32; stride: uint32) {.cdecl,
+      importc: "vkCmdDrawIndexedIndirectCountAMD", dynlib: vulkandll.}
+const
+  AMD_negative_viewport_height* = 1
+  AMD_NEGATIVE_VIEWPORT_HEIGHT_SPEC_VERSION* = 1
+  AMD_NEGATIVE_VIEWPORT_HEIGHT_EXTENSION_NAME* = "VK_AMD_negative_viewport_height"
+  AMD_gpu_shader_half_float* = 1
+  AMD_GPU_SHADER_HALF_FLOAT_SPEC_VERSION* = 1
+  AMD_GPU_SHADER_HALF_FLOAT_EXTENSION_NAME* = "VK_AMD_gpu_shader_half_float"
+  AMD_shader_ballot* = 1
+  AMD_SHADER_BALLOT_SPEC_VERSION* = 1
+  AMD_SHADER_BALLOT_EXTENSION_NAME* = "VK_AMD_shader_ballot"
+  KHX_multiview* = 1
+  KHX_MULTIVIEW_SPEC_VERSION* = 1
+  KHX_MULTIVIEW_EXTENSION_NAME* = "VK_KHX_multiview"
+
+type
+  RenderPassMultiviewCreateInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    subpassCount*: uint32
+    pViewMasks*: ptr uint32
+    dependencyCount*: uint32
+    pViewOffsets*: ptr int32
+    correlationMaskCount*: uint32
+    pCorrelationMasks*: ptr uint32
+
+  PhysicalDeviceMultiviewFeaturesKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    multiview*: Bool32
+    multiviewGeometryShader*: Bool32
+    multiviewTessellationShader*: Bool32
+
+  PhysicalDeviceMultiviewPropertiesKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    maxMultiviewViewCount*: uint32
+    maxMultiviewInstanceIndex*: uint32
+
+
+const
+  IMG_format_pvrtc* = 1
+  IMG_FORMAT_PVRTC_SPEC_VERSION* = 1
+  IMG_FORMAT_PVRTC_EXTENSION_NAME* = "VK_IMG_format_pvrtc"
+  NV_external_memory_capabilities* = 1
+  NV_EXTERNAL_MEMORY_CAPABILITIES_SPEC_VERSION* = 1
+  NV_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME* = "VK_NV_external_memory_capabilities"
+
+type
+  ExternalMemoryHandleTypeFlagBitsNV* {.size: sizeof(cint).} = enum
+    EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT_NV = 0x00000001,
+    EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT_NV = 0x00000002,
+    EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_IMAGE_BIT_NV = 0x00000004,
+    EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_IMAGE_KMT_BIT_NV = 0x00000008
+  ExternalMemoryHandleTypeFlagsNV* = Flags
+  ExternalMemoryFeatureFlagBitsNV* {.size: sizeof(cint).} = enum
+    EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_BIT_NV = 0x00000001,
+    EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT_NV = 0x00000002,
+    EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT_NV = 0x00000004
+  ExternalMemoryFeatureFlagsNV* = Flags
+  ExternalImageFormatPropertiesNV* = object
+    imageFormatProperties*: ImageFormatProperties
+    externalMemoryFeatures*: ExternalMemoryFeatureFlagsNV
+    exportFromImportedHandleTypes*: ExternalMemoryHandleTypeFlagsNV
+    compatibleHandleTypes*: ExternalMemoryHandleTypeFlagsNV
+
+  GetPhysicalDeviceExternalImageFormatPropertiesNV* = proc (
+      physicalDevice: PhysicalDevice; format: Format; `type`: ImageType;
+      tiling: ImageTiling; usage: ImageUsageFlags; flags: ImageCreateFlags;
+      externalHandleType: ExternalMemoryHandleTypeFlagsNV;
+      pExternalImageFormatProperties: ptr ExternalImageFormatPropertiesNV): Result {.
+      cdecl.}
+
+
+
+when not defined(NO_PROTOTYPES):
+  proc getPhysicalDeviceExternalImageFormatPropertiesNV*(
+      physicalDevice: PhysicalDevice; format: Format; `type`: ImageType;
+      tiling: ImageTiling; usage: ImageUsageFlags; flags: ImageCreateFlags;
+      externalHandleType: ExternalMemoryHandleTypeFlagsNV;
+      pExternalImageFormatProperties: ptr ExternalImageFormatPropertiesNV): Result {.
+      cdecl, importc: "vkGetPhysicalDeviceExternalImageFormatPropertiesNV",
+      dynlib: vulkandll.}
+const
+  NV_external_memory* = 1
+  NV_EXTERNAL_MEMORY_SPEC_VERSION* = 1
+  NV_EXTERNAL_MEMORY_EXTENSION_NAME* = "VK_NV_external_memory"
+
+type
+  ExternalMemoryImageCreateInfoNV* = object
+    sType*: StructureType
+    pNext*: pointer
+    handleTypes*: ExternalMemoryHandleTypeFlagsNV
+
+  ExportMemoryAllocateInfoNV* = object
+    sType*: StructureType
+    pNext*: pointer
+    handleTypes*: ExternalMemoryHandleTypeFlagsNV
+
+
+when defined(USE_PLATFORM_WIN32_KHR):
+  const
+    NV_external_memory_win32* = 1
+    NV_EXTERNAL_MEMORY_WIN32_SPEC_VERSION* = 1
+    NV_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME* = "VK_NV_external_memory_win32"
+  type
+    ImportMemoryWin32HandleInfoNV* = object
+      sType*: StructureType
+      pNext*: pointer
+      handleType*: ExternalMemoryHandleTypeFlagsNV
+      handle*: HANDLE
+
+    ExportMemoryWin32HandleInfoNV* = object
+      sType*: StructureType
+      pNext*: pointer
+      pAttributes*: ptr SECURITY_ATTRIBUTES
+      dwAccess*: DWORD
+
+    GetMemoryWin32HandleNV* = proc (device: Device; memory: DeviceMemory;
+                                 handleType: ExternalMemoryHandleTypeFlagsNV;
+                                 pHandle: ptr HANDLE): Result {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc getMemoryWin32HandleNV*(device: Device; memory: DeviceMemory;
+                                handleType: ExternalMemoryHandleTypeFlagsNV;
+                                pHandle: ptr HANDLE): Result {.cdecl,
+        importc: "vkGetMemoryWin32HandleNV", dynlib: vulkandll.}
+when defined(USE_PLATFORM_WIN32_KHR):
+  const
+    NV_win32_keyed_mutex* = 1
+    NV_WIN32_KEYED_MUTEX_SPEC_VERSION* = 1
+    NV_WIN32_KEYED_MUTEX_EXTENSION_NAME* = "VK_NV_win32_keyed_mutex"
+  type
+    Win32KeyedMutexAcquireReleaseInfoNV* = object
+      sType*: StructureType
+      pNext*: pointer
+      acquireCount*: uint32
+      pAcquireSyncs*: ptr DeviceMemory
+      pAcquireKeys*: ptr uint64
+      pAcquireTimeoutMilliseconds*: ptr uint32
+      releaseCount*: uint32
+      pReleaseSyncs*: ptr DeviceMemory
+      pReleaseKeys*: ptr uint64
+
+const
+  KHX_device_group* = 1
+  MAX_DEVICE_GROUP_SIZE_KHX* = 32
+  KHX_DEVICE_GROUP_SPEC_VERSION* = 1
+  KHX_DEVICE_GROUP_EXTENSION_NAME* = "VK_KHX_device_group"
+
+type
+  PeerMemoryFeatureFlagBitsKHX* {.size: sizeof(cint).} = enum
+    COPY_SRC_BIT_KHX = 0x00000001, COPY_DST_BIT_KHX = 0x00000002,
+    GENERIC_SRC_BIT_KHX = 0x00000004, GENERIC_DST_BIT_KHX = 0x00000008
+  PeerMemoryFeatureFlagsKHX* = Flags
+  MemoryAllocateFlagBitsKHX* {.size: sizeof(cint).} = enum
+    MEMORY_ALLOCATE_DEVICE_MASK_BIT_KHX = 0x00000001
+  MemoryAllocateFlagsKHX* = Flags
+  DeviceGroupPresentModeFlagBitsKHX* {.size: sizeof(cint).} = enum
+    LOCAL_BIT_KHX = 0x00000001, REMOTE_BIT_KHX = 0x00000002, SUM_BIT_KHX = 0x00000004,
+    LOCAL_MULTI_DEVICE_BIT_KHX = 0x00000008
+  DeviceGroupPresentModeFlagsKHX* = Flags
+  MemoryAllocateFlagsInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: MemoryAllocateFlagsKHX
+    deviceMask*: uint32
+
+  BindBufferMemoryInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    buffer*: Buffer
+    memory*: DeviceMemory
+    memoryOffset*: DeviceSize
+    deviceIndexCount*: uint32
+    pDeviceIndices*: ptr uint32
+
+  BindImageMemoryInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    image*: Image
+    memory*: DeviceMemory
+    memoryOffset*: DeviceSize
+    deviceIndexCount*: uint32
+    pDeviceIndices*: ptr uint32
+    SFRRectCount*: uint32
+    pSFRRects*: ptr Rect2D
+
+  DeviceGroupRenderPassBeginInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    deviceMask*: uint32
+    deviceRenderAreaCount*: uint32
+    pDeviceRenderAreas*: ptr Rect2D
+
+  DeviceGroupCommandBufferBeginInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    deviceMask*: uint32
+
+  DeviceGroupSubmitInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    waitSemaphoreCount*: uint32
+    pWaitSemaphoreDeviceIndices*: ptr uint32
+    commandBufferCount*: uint32
+    pCommandBufferDeviceMasks*: ptr uint32
+    signalSemaphoreCount*: uint32
+    pSignalSemaphoreDeviceIndices*: ptr uint32
+
+  DeviceGroupBindSparseInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    resourceDeviceIndex*: uint32
+    memoryDeviceIndex*: uint32
+
+  DeviceGroupPresentCapabilitiesKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    presentMask*: array[MAX_DEVICE_GROUP_SIZE_KHX, uint32]
+    modes*: DeviceGroupPresentModeFlagsKHX
+
+  ImageSwapchainCreateInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    swapchain*: SwapchainKHR
+
+  BindImageMemorySwapchainInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    swapchain*: SwapchainKHR
+    imageIndex*: uint32
+
+  AcquireNextImageInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    swapchain*: SwapchainKHR
+    timeout*: uint64
+    semaphore*: Semaphore
+    fence*: Fence
+    deviceMask*: uint32
+
+  DeviceGroupPresentInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    swapchainCount*: uint32
+    pDeviceMasks*: ptr uint32
+    mode*: DeviceGroupPresentModeFlagBitsKHX
+
+  DeviceGroupSwapchainCreateInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    modes*: DeviceGroupPresentModeFlagsKHX
+
+  GetDeviceGroupPeerMemoryFeaturesKHX* = proc (device: Device; heapIndex: uint32;
+      localDeviceIndex: uint32; remoteDeviceIndex: uint32;
+      pPeerMemoryFeatures: ptr PeerMemoryFeatureFlagsKHX) {.cdecl.}
+  BindBufferMemory2KHX* = proc (device: Device; bindInfoCount: uint32;
+                             pBindInfos: ptr BindBufferMemoryInfoKHX): Result {.
+      cdecl.}
+  BindImageMemory2KHX* = proc (device: Device; bindInfoCount: uint32;
+                            pBindInfos: ptr BindImageMemoryInfoKHX): Result {.cdecl.}
+  CmdSetDeviceMaskKHX* = proc (commandBuffer: CommandBuffer; deviceMask: uint32) {.
+      cdecl.}
+  GetDeviceGroupPresentCapabilitiesKHX* = proc (device: Device;
+      pDeviceGroupPresentCapabilities: ptr DeviceGroupPresentCapabilitiesKHX): Result {.
+      cdecl.}
+  GetDeviceGroupSurfacePresentModesKHX* = proc (device: Device; surface: SurfaceKHR;
+      pModes: ptr DeviceGroupPresentModeFlagsKHX): Result {.cdecl.}
+  AcquireNextImage2KHX* = proc (device: Device;
+                             pAcquireInfo: ptr AcquireNextImageInfoKHX;
+                             pImageIndex: ptr uint32): Result {.cdecl.}
+  CmdDispatchBaseKHX* = proc (commandBuffer: CommandBuffer; baseGroupX: uint32;
+                           baseGroupY: uint32; baseGroupZ: uint32;
+                           groupCountX: uint32; groupCountY: uint32;
+                           groupCountZ: uint32) {.cdecl.}
+  GetPhysicalDevicePresentRectanglesKHX* = proc (physicalDevice: PhysicalDevice;
+      surface: SurfaceKHR; pRectCount: ptr uint32; pRects: ptr Rect2D): Result {.cdecl.}
+
+
+
+
+when not defined(NO_PROTOTYPES):
+  proc getDeviceGroupPeerMemoryFeaturesKHX*(device: Device; heapIndex: uint32;
+      localDeviceIndex: uint32; remoteDeviceIndex: uint32;
+      pPeerMemoryFeatures: ptr PeerMemoryFeatureFlagsKHX) {.cdecl,
+      importc: "vkGetDeviceGroupPeerMemoryFeaturesKHX", dynlib: vulkandll.}
+  proc bindBufferMemory2KHX*(device: Device; bindInfoCount: uint32;
+                            pBindInfos: ptr BindBufferMemoryInfoKHX): Result {.
+      cdecl, importc: "vkBindBufferMemory2KHX", dynlib: vulkandll.}
+  proc bindImageMemory2KHX*(device: Device; bindInfoCount: uint32;
+                           pBindInfos: ptr BindImageMemoryInfoKHX): Result {.cdecl,
+      importc: "vkBindImageMemory2KHX", dynlib: vulkandll.}
+  proc cmdSetDeviceMaskKHX*(commandBuffer: CommandBuffer; deviceMask: uint32) {.
+      cdecl, importc: "vkCmdSetDeviceMaskKHX", dynlib: vulkandll.}
+  proc getDeviceGroupPresentCapabilitiesKHX*(device: Device;
+      pDeviceGroupPresentCapabilities: ptr DeviceGroupPresentCapabilitiesKHX): Result {.
+      cdecl, importc: "vkGetDeviceGroupPresentCapabilitiesKHX", dynlib: vulkandll.}
+  proc getDeviceGroupSurfacePresentModesKHX*(device: Device; surface: SurfaceKHR;
+      pModes: ptr DeviceGroupPresentModeFlagsKHX): Result {.cdecl,
+      importc: "vkGetDeviceGroupSurfacePresentModesKHX", dynlib: vulkandll.}
+  proc acquireNextImage2KHX*(device: Device;
+                            pAcquireInfo: ptr AcquireNextImageInfoKHX;
+                            pImageIndex: ptr uint32): Result {.cdecl,
+      importc: "vkAcquireNextImage2KHX", dynlib: vulkandll.}
+  proc cmdDispatchBaseKHX*(commandBuffer: CommandBuffer; baseGroupX: uint32;
+                          baseGroupY: uint32; baseGroupZ: uint32;
+                          groupCountX: uint32; groupCountY: uint32;
+                          groupCountZ: uint32) {.cdecl,
+      importc: "vkCmdDispatchBaseKHX", dynlib: vulkandll.}
+  proc getPhysicalDevicePresentRectanglesKHX*(physicalDevice: PhysicalDevice;
+      surface: SurfaceKHR; pRectCount: ptr uint32; pRects: ptr Rect2D): Result {.cdecl,
+      importc: "vkGetPhysicalDevicePresentRectanglesKHX", dynlib: vulkandll.}
+const
+  EXT_validation_flags* = 1
+  EXT_VALIDATION_FLAGS_SPEC_VERSION* = 1
+  EXT_VALIDATION_FLAGS_EXTENSION_NAME* = "VK_EXT_validation_flags"
+
+type
+  ValidationCheckEXT* {.size: sizeof(cint).} = enum
+    VALIDATION_CHECK_ALL_EXT = 0
+  ValidationFlagsEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    disabledValidationCheckCount*: uint32
+    pDisabledValidationChecks*: ptr ValidationCheckEXT
+
+
+
+when defined(USE_PLATFORM_VI_NN):
+  const
+    NN_vi_surface* = 1
+    NN_VI_SURFACE_SPEC_VERSION* = 1
+    NN_VI_SURFACE_EXTENSION_NAME* = "VK_NN_vi_surface"
+  type
+    ViSurfaceCreateFlagsNN* = Flags
+    ViSurfaceCreateInfoNN* = object
+      sType*: StructureType
+      pNext*: pointer
+      flags*: ViSurfaceCreateFlagsNN
+      window*: pointer
+
+    CreateViSurfaceNN* = proc (instance: Instance;
+                            pCreateInfo: ptr ViSurfaceCreateInfoNN;
+                            pAllocator: ptr AllocationCallbacks;
+                            pSurface: ptr SurfaceKHR): Result {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc createViSurfaceNN*(instance: Instance;
+                           pCreateInfo: ptr ViSurfaceCreateInfoNN;
+                           pAllocator: ptr AllocationCallbacks;
+                           pSurface: ptr SurfaceKHR): Result {.cdecl,
+        importc: "vkCreateViSurfaceNN", dynlib: vulkandll.}
+const
+  EXT_shader_subgroup_ballot* = 1
+  EXT_SHADER_SUBGROUP_BALLOT_SPEC_VERSION* = 1
+  EXT_SHADER_SUBGROUP_BALLOT_EXTENSION_NAME* = "VK_EXT_shader_subgroup_ballot"
+  EXT_shader_subgroup_vote* = 1
+  EXT_SHADER_SUBGROUP_VOTE_SPEC_VERSION* = 1
+  EXT_SHADER_SUBGROUP_VOTE_EXTENSION_NAME* = "VK_EXT_shader_subgroup_vote"
+  KHX_device_group_creation* = 1
+  KHX_DEVICE_GROUP_CREATION_SPEC_VERSION* = 1
+  KHX_DEVICE_GROUP_CREATION_EXTENSION_NAME* = "VK_KHX_device_group_creation"
+
+type
+  PhysicalDeviceGroupPropertiesKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    physicalDeviceCount*: uint32
+    physicalDevices*: array[MAX_DEVICE_GROUP_SIZE_KHX, PhysicalDevice]
+    subsetAllocation*: Bool32
+
+  DeviceGroupDeviceCreateInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    physicalDeviceCount*: uint32
+    pPhysicalDevices*: ptr PhysicalDevice
+
+  EnumeratePhysicalDeviceGroupsKHX* = proc (instance: Instance;
+      pPhysicalDeviceGroupCount: ptr uint32;
+      pPhysicalDeviceGroupProperties: ptr PhysicalDeviceGroupPropertiesKHX): Result {.
+      cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc enumeratePhysicalDeviceGroupsKHX*(instance: Instance;
+                                        pPhysicalDeviceGroupCount: ptr uint32;
+      pPhysicalDeviceGroupProperties: ptr PhysicalDeviceGroupPropertiesKHX): Result {.
+      cdecl, importc: "vkEnumeratePhysicalDeviceGroupsKHX", dynlib: vulkandll.}
+const
+  KHX_external_memory_capabilities* = 1
+  LUID_SIZE_KHX* = 8
+  KHX_EXTERNAL_MEMORY_CAPABILITIES_SPEC_VERSION* = 1
+  KHX_EXTERNAL_MEMORY_CAPABILITIES_EXTENSION_NAME* = "VK_KHX_external_memory_capabilities"
+
+type
+  ExternalMemoryHandleTypeFlagBitsKHX* {.size: sizeof(cint).} = enum
+    EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_FD_BIT_KHX = 0x00000001,
+    EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_BIT_KHX = 0x00000002,
+    EXTERNAL_MEMORY_HANDLE_TYPE_OPAQUE_WIN32_KMT_BIT_KHX = 0x00000004,
+    EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_TEXTURE_BIT_KHX = 0x00000008,
+    EXTERNAL_MEMORY_HANDLE_TYPE_D3D11_TEXTURE_KMT_BIT_KHX = 0x00000010,
+    EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_HEAP_BIT_KHX = 0x00000020,
+    EXTERNAL_MEMORY_HANDLE_TYPE_D3D12_RESOURCE_BIT_KHX = 0x00000040
+  ExternalMemoryHandleTypeFlagsKHX* = Flags
+  ExternalMemoryFeatureFlagBitsKHX* {.size: sizeof(cint).} = enum
+    EXTERNAL_MEMORY_FEATURE_DEDICATED_ONLY_BIT_KHX = 0x00000001,
+    EXTERNAL_MEMORY_FEATURE_EXPORTABLE_BIT_KHX = 0x00000002,
+    EXTERNAL_MEMORY_FEATURE_IMPORTABLE_BIT_KHX = 0x00000004
+  ExternalMemoryFeatureFlagsKHX* = Flags
+  ExternalMemoryPropertiesKHX* = object
+    externalMemoryFeatures*: ExternalMemoryFeatureFlagsKHX
+    exportFromImportedHandleTypes*: ExternalMemoryHandleTypeFlagsKHX
+    compatibleHandleTypes*: ExternalMemoryHandleTypeFlagsKHX
+
+  PhysicalDeviceExternalImageFormatInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    handleType*: ExternalMemoryHandleTypeFlagBitsKHX
+
+  ExternalImageFormatPropertiesKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    externalMemoryProperties*: ExternalMemoryPropertiesKHX
+
+  PhysicalDeviceExternalBufferInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: BufferCreateFlags
+    usage*: BufferUsageFlags
+    handleType*: ExternalMemoryHandleTypeFlagBitsKHX
+
+  ExternalBufferPropertiesKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    externalMemoryProperties*: ExternalMemoryPropertiesKHX
+
+  PhysicalDeviceIDPropertiesKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    deviceUUID*: array[UUID_SIZE, uint8]
+    driverUUID*: array[UUID_SIZE, uint8]
+    deviceLUID*: array[LUID_SIZE_KHX, uint8]
+    deviceLUIDValid*: Bool32
+
+  GetPhysicalDeviceExternalBufferPropertiesKHX* = proc (
+      physicalDevice: PhysicalDevice;
+      pExternalBufferInfo: ptr PhysicalDeviceExternalBufferInfoKHX;
+      pExternalBufferProperties: ptr ExternalBufferPropertiesKHX) {.cdecl.}
+
+
+
+when not defined(NO_PROTOTYPES):
+  proc getPhysicalDeviceExternalBufferPropertiesKHX*(
+      physicalDevice: PhysicalDevice;
+      pExternalBufferInfo: ptr PhysicalDeviceExternalBufferInfoKHX;
+      pExternalBufferProperties: ptr ExternalBufferPropertiesKHX) {.cdecl,
+      importc: "vkGetPhysicalDeviceExternalBufferPropertiesKHX", dynlib: vulkandll.}
+const
+  KHX_external_memory* = 1
+  KHX_EXTERNAL_MEMORY_SPEC_VERSION* = 1
+  KHX_EXTERNAL_MEMORY_EXTENSION_NAME* = "VK_KHX_external_memory"
+  QUEUE_FAMILY_EXTERNAL_KHX* = (not 0 - 1)
+
+type
+  ExternalMemoryImageCreateInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    handleTypes*: ExternalMemoryHandleTypeFlagsKHX
+
+  ExternalMemoryBufferCreateInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    handleTypes*: ExternalMemoryHandleTypeFlagsKHX
+
+  ExportMemoryAllocateInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    handleTypes*: ExternalMemoryHandleTypeFlagsKHX
+
+
+when defined(USE_PLATFORM_WIN32_KHX):
+  const
+    KHX_external_memory_win32* = 1
+    KHX_EXTERNAL_MEMORY_WIN32_SPEC_VERSION* = 1
+    KHX_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME* = "VK_KHX_external_memory_win32"
+  type
+    ImportMemoryWin32HandleInfoKHX* = object
+      sType*: StructureType
+      pNext*: pointer
+      handleType*: ExternalMemoryHandleTypeFlagBitsKHX
+      handle*: HANDLE
+
+    ExportMemoryWin32HandleInfoKHX* = object
+      sType*: StructureType
+      pNext*: pointer
+      pAttributes*: ptr SECURITY_ATTRIBUTES
+      dwAccess*: DWORD
+      name*: LPCWSTR
+
+    MemoryWin32HandlePropertiesKHX* = object
+      sType*: StructureType
+      pNext*: pointer
+      memoryTypeBits*: uint32
+
+    GetMemoryWin32HandleKHX* = proc (device: Device; memory: DeviceMemory; handleType: ExternalMemoryHandleTypeFlagBitsKHX;
+                                  pHandle: ptr HANDLE): Result {.cdecl.}
+    GetMemoryWin32HandlePropertiesKHX* = proc (device: Device;
+        handleType: ExternalMemoryHandleTypeFlagBitsKHX; handle: HANDLE;
+        pMemoryWin32HandleProperties: ptr MemoryWin32HandlePropertiesKHX): Result {.
+        cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc getMemoryWin32HandleKHX*(device: Device; memory: DeviceMemory; handleType: ExternalMemoryHandleTypeFlagBitsKHX;
+                                 pHandle: ptr HANDLE): Result {.cdecl,
+        importc: "vkGetMemoryWin32HandleKHX", dynlib: vulkandll.}
+    proc getMemoryWin32HandlePropertiesKHX*(device: Device;
+        handleType: ExternalMemoryHandleTypeFlagBitsKHX; handle: HANDLE;
+        pMemoryWin32HandleProperties: ptr MemoryWin32HandlePropertiesKHX): Result {.
+        cdecl, importc: "vkGetMemoryWin32HandlePropertiesKHX", dynlib: vulkandll.}
+const
+  KHX_external_memory_fd* = 1
+  KHX_EXTERNAL_MEMORY_FD_SPEC_VERSION* = 1
+  KHX_EXTERNAL_MEMORY_FD_EXTENSION_NAME* = "VK_KHX_external_memory_fd"
+
+type
+  ImportMemoryFdInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    handleType*: ExternalMemoryHandleTypeFlagBitsKHX
+    fd*: cint
+
+  MemoryFdPropertiesKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    memoryTypeBits*: uint32
+
+  GetMemoryFdKHX* = proc (device: Device; memory: DeviceMemory;
+                       handleType: ExternalMemoryHandleTypeFlagBitsKHX;
+                       pFd: ptr cint): Result {.cdecl.}
+  GetMemoryFdPropertiesKHX* = proc (device: Device; handleType: ExternalMemoryHandleTypeFlagBitsKHX;
+                                 fd: cint;
+                                 pMemoryFdProperties: ptr MemoryFdPropertiesKHX): Result {.
+      cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc getMemoryFdKHX*(device: Device; memory: DeviceMemory;
+                      handleType: ExternalMemoryHandleTypeFlagBitsKHX;
+                      pFd: ptr cint): Result {.cdecl, importc: "vkGetMemoryFdKHX",
+      dynlib: vulkandll.}
+  proc getMemoryFdPropertiesKHX*(device: Device; handleType: ExternalMemoryHandleTypeFlagBitsKHX;
+                                fd: cint;
+                                pMemoryFdProperties: ptr MemoryFdPropertiesKHX): Result {.
+      cdecl, importc: "vkGetMemoryFdPropertiesKHX", dynlib: vulkandll.}
+when defined(USE_PLATFORM_WIN32_KHR):
+  const
+    KHX_win32_keyed_mutex* = 1
+    KHX_WIN32_KEYED_MUTEX_SPEC_VERSION* = 1
+    KHX_WIN32_KEYED_MUTEX_EXTENSION_NAME* = "VK_KHX_win32_keyed_mutex"
+  type
+    Win32KeyedMutexAcquireReleaseInfoKHX* = object
+      sType*: StructureType
+      pNext*: pointer
+      acquireCount*: uint32
+      pAcquireSyncs*: ptr DeviceMemory
+      pAcquireKeys*: ptr uint64
+      pAcquireTimeouts*: ptr uint32
+      releaseCount*: uint32
+      pReleaseSyncs*: ptr DeviceMemory
+      pReleaseKeys*: ptr uint64
+
+const
+  KHX_external_semaphore_capabilities* = 1
+  KHX_EXTERNAL_SEMAPHORE_CAPABILITIES_SPEC_VERSION* = 1
+  KHX_EXTERNAL_SEMAPHORE_CAPABILITIES_EXTENSION_NAME* = "VK_KHX_external_semaphore_capabilities"
+
+type
+  ExternalSemaphoreHandleTypeFlagBitsKHX* {.size: sizeof(cint).} = enum
+    OPAQUE_FD_BIT_KHX = 0x00000001, OPAQUE_WIN32_BIT_KHX = 0x00000002,
+    OPAQUE_WIN32_KMT_BIT_KHX = 0x00000004, D3D12_FENCE_BIT_KHX = 0x00000008,
+    FENCE_FD_BIT_KHX = 0x00000010
+  ExternalSemaphoreHandleTypeFlagsKHX* = Flags
+  ExternalSemaphoreFeatureFlagBitsKHX* {.size: sizeof(cint).} = enum
+    EXPORTABLE_BIT_KHX = 0x00000001, IMPORTABLE_BIT_KHX = 0x00000002
+  ExternalSemaphoreFeatureFlagsKHX* = Flags
+  PhysicalDeviceExternalSemaphoreInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    handleType*: ExternalSemaphoreHandleTypeFlagBitsKHX
+
+  ExternalSemaphorePropertiesKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    exportFromImportedHandleTypes*: ExternalSemaphoreHandleTypeFlagsKHX
+    compatibleHandleTypes*: ExternalSemaphoreHandleTypeFlagsKHX
+    externalSemaphoreFeatures*: ExternalSemaphoreFeatureFlagsKHX
+
+  GetPhysicalDeviceExternalSemaphorePropertiesKHX* = proc (
+      physicalDevice: PhysicalDevice;
+      pExternalSemaphoreInfo: ptr PhysicalDeviceExternalSemaphoreInfoKHX;
+      pExternalSemaphoreProperties: ptr ExternalSemaphorePropertiesKHX) {.cdecl.}
+
+
+
+when not defined(NO_PROTOTYPES):
+  proc getPhysicalDeviceExternalSemaphorePropertiesKHX*(
+      physicalDevice: PhysicalDevice;
+      pExternalSemaphoreInfo: ptr PhysicalDeviceExternalSemaphoreInfoKHX;
+      pExternalSemaphoreProperties: ptr ExternalSemaphorePropertiesKHX) {.cdecl,
+      importc: "vkGetPhysicalDeviceExternalSemaphorePropertiesKHX",
+      dynlib: vulkandll.}
+const
+  KHX_external_semaphore* = 1
+  KHX_EXTERNAL_SEMAPHORE_SPEC_VERSION* = 1
+  KHX_EXTERNAL_SEMAPHORE_EXTENSION_NAME* = "VK_KHX_external_semaphore"
+
+type
+  ExportSemaphoreCreateInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    handleTypes*: ExternalSemaphoreHandleTypeFlagsKHX
+
+
+when defined(USE_PLATFORM_WIN32_KHX):
+  const
+    KHX_external_semaphore_win32* = 1
+    KHX_EXTERNAL_SEMAPHORE_WIN32_SPEC_VERSION* = 1
+    KHX_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME* = "VK_KHX_external_semaphore_win32"
+  type
+    ImportSemaphoreWin32HandleInfoKHX* = object
+      sType*: StructureType
+      pNext*: pointer
+      semaphore*: Semaphore
+      handleType*: ExternalSemaphoreHandleTypeFlagsKHX
+      handle*: HANDLE
+
+    ExportSemaphoreWin32HandleInfoKHX* = object
+      sType*: StructureType
+      pNext*: pointer
+      pAttributes*: ptr SECURITY_ATTRIBUTES
+      dwAccess*: DWORD
+      name*: LPCWSTR
+
+    D3D12FenceSubmitInfoKHX* = object
+      sType*: StructureType
+      pNext*: pointer
+      waitSemaphoreValuesCount*: uint32
+      pWaitSemaphoreValues*: ptr uint64
+      signalSemaphoreValuesCount*: uint32
+      pSignalSemaphoreValues*: ptr uint64
+
+    ImportSemaphoreWin32HandleKHX* = proc (device: Device;
+        pImportSemaphoreWin32HandleInfo: ptr ImportSemaphoreWin32HandleInfoKHX): Result {.
+        cdecl.}
+    GetSemaphoreWin32HandleKHX* = proc (device: Device; semaphore: Semaphore;
+        handleType: ExternalSemaphoreHandleTypeFlagBitsKHX; pHandle: ptr HANDLE): Result {.
+        cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc importSemaphoreWin32HandleKHX*(device: Device;
+        pImportSemaphoreWin32HandleInfo: ptr ImportSemaphoreWin32HandleInfoKHX): Result {.
+        cdecl, importc: "vkImportSemaphoreWin32HandleKHX", dynlib: vulkandll.}
+    proc getSemaphoreWin32HandleKHX*(device: Device; semaphore: Semaphore; handleType: ExternalSemaphoreHandleTypeFlagBitsKHX;
+                                    pHandle: ptr HANDLE): Result {.cdecl,
+        importc: "vkGetSemaphoreWin32HandleKHX", dynlib: vulkandll.}
+const
+  KHX_external_semaphore_fd* = 1
+  KHX_EXTERNAL_SEMAPHORE_FD_SPEC_VERSION* = 1
+  KHX_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME* = "VK_KHX_external_semaphore_fd"
+
+type
+  ImportSemaphoreFdInfoKHX* = object
+    sType*: StructureType
+    pNext*: pointer
+    semaphore*: Semaphore
+    handleType*: ExternalSemaphoreHandleTypeFlagBitsKHX
+    fd*: cint
+
+  ImportSemaphoreFdKHX* = proc (device: Device; pImportSemaphoreFdInfo: ptr ImportSemaphoreFdInfoKHX): Result {.
+      cdecl.}
+  GetSemaphoreFdKHX* = proc (device: Device; semaphore: Semaphore;
+                          handleType: ExternalSemaphoreHandleTypeFlagBitsKHX;
+                          pFd: ptr cint): Result {.cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc importSemaphoreFdKHX*(device: Device; pImportSemaphoreFdInfo: ptr ImportSemaphoreFdInfoKHX): Result {.
+      cdecl, importc: "vkImportSemaphoreFdKHX", dynlib: vulkandll.}
+  proc getSemaphoreFdKHX*(device: Device; semaphore: Semaphore;
+                         handleType: ExternalSemaphoreHandleTypeFlagBitsKHX;
+                         pFd: ptr cint): Result {.cdecl,
+      importc: "vkGetSemaphoreFdKHX", dynlib: vulkandll.}
+const
+  NVX_device_generated_commands* = 1
+  NVX_DEVICE_GENERATED_COMMANDS_SPEC_VERSION* = 1
+  NVX_DEVICE_GENERATED_COMMANDS_EXTENSION_NAME* = "VK_NVX_device_generated_commands"
+
+type
+  IndirectCommandsTokenTypeNVX* {.size: sizeof(cint).} = enum
+    INDIRECT_COMMANDS_TOKEN_PIPELINE_NVX = 0,
+    INDIRECT_COMMANDS_TOKEN_DESCRIPTOR_SET_NVX = 1,
+    INDIRECT_COMMANDS_TOKEN_INDEX_BUFFER_NVX = 2,
+    INDIRECT_COMMANDS_TOKEN_VERTEX_BUFFER_NVX = 3,
+    INDIRECT_COMMANDS_TOKEN_PUSH_CONSTANT_NVX = 4,
+    INDIRECT_COMMANDS_TOKEN_DRAW_INDEXED_NVX = 5,
+    INDIRECT_COMMANDS_TOKEN_DRAW_NVX = 6, INDIRECT_COMMANDS_TOKEN_DISPATCH_NVX = 7
+  ObjectEntryTypeNVX* {.size: sizeof(cint).} = enum
+    OBJECT_ENTRY_DESCRIPTOR_SET_NVX = 0, OBJECT_ENTRY_PIPELINE_NVX = 1,
+    OBJECT_ENTRY_INDEX_BUFFER_NVX = 2, OBJECT_ENTRY_VERTEX_BUFFER_NVX = 3,
+    OBJECT_ENTRY_PUSH_CONSTANT_NVX = 4
+  IndirectCommandsLayoutUsageFlagBitsNVX* {.size: sizeof(cint).} = enum
+    USAGE_UNORDERED_SEQUENCES_BIT_NVX = 0x00000001,
+    USAGE_SPARSE_SEQUENCES_BIT_NVX = 0x00000002,
+    USAGE_EMPTY_EXECUTIONS_BIT_NVX = 0x00000004,
+    USAGE_INDEXED_SEQUENCES_BIT_NVX = 0x00000008
+  IndirectCommandsLayoutUsageFlagsNVX* = Flags
+  ObjectEntryUsageFlagBitsNVX* {.size: sizeof(cint).} = enum
+    OBJECT_ENTRY_USAGE_GRAPHICS_BIT_NVX = 0x00000001,
+    OBJECT_ENTRY_USAGE_COMPUTE_BIT_NVX = 0x00000002
+  ObjectEntryUsageFlagsNVX* = Flags
+  DeviceGeneratedCommandsFeaturesNVX* = object
+    sType*: StructureType
+    pNext*: pointer
+    computeBindingPointSupport*: Bool32
+
+  DeviceGeneratedCommandsLimitsNVX* = object
+    sType*: StructureType
+    pNext*: pointer
+    maxIndirectCommandsLayoutTokenCount*: uint32
+    maxObjectEntryCounts*: uint32
+    minSequenceCountBufferOffsetAlignment*: uint32
+    minSequenceIndexBufferOffsetAlignment*: uint32
+    minCommandsTokenBufferOffsetAlignment*: uint32
+
+  IndirectCommandsTokenNVX* = object
+    tokenType*: IndirectCommandsTokenTypeNVX
+    buffer*: Buffer
+    offset*: DeviceSize
+
+  IndirectCommandsLayoutTokenNVX* = object
+    tokenType*: IndirectCommandsTokenTypeNVX
+    bindingUnit*: uint32
+    dynamicCount*: uint32
+    divisor*: uint32
+
+  IndirectCommandsLayoutCreateInfoNVX* = object
+    sType*: StructureType
+    pNext*: pointer
+    pipelineBindPoint*: PipelineBindPoint
+    flags*: IndirectCommandsLayoutUsageFlagsNVX
+    tokenCount*: uint32
+    pTokens*: ptr IndirectCommandsLayoutTokenNVX
+
+  CmdProcessCommandsInfoNVX* = object
+    sType*: StructureType
+    pNext*: pointer
+    objectTable*: ObjectTableNVX
+    indirectCommandsLayout*: IndirectCommandsLayoutNVX
+    indirectCommandsTokenCount*: uint32
+    pIndirectCommandsTokens*: ptr IndirectCommandsTokenNVX
+    maxSequencesCount*: uint32
+    targetCommandBuffer*: CommandBuffer
+    sequencesCountBuffer*: Buffer
+    sequencesCountOffset*: DeviceSize
+    sequencesIndexBuffer*: Buffer
+    sequencesIndexOffset*: DeviceSize
+
+  CmdReserveSpaceForCommandsInfoNVX* = object
+    sType*: StructureType
+    pNext*: pointer
+    objectTable*: ObjectTableNVX
+    indirectCommandsLayout*: IndirectCommandsLayoutNVX
+    maxSequencesCount*: uint32
+
+  ObjectTableCreateInfoNVX* = object
+    sType*: StructureType
+    pNext*: pointer
+    objectCount*: uint32
+    pObjectEntryTypes*: ptr ObjectEntryTypeNVX
+    pObjectEntryCounts*: ptr uint32
+    pObjectEntryUsageFlags*: ptr ObjectEntryUsageFlagsNVX
+    maxUniformBuffersPerDescriptor*: uint32
+    maxStorageBuffersPerDescriptor*: uint32
+    maxStorageImagesPerDescriptor*: uint32
+    maxSampledImagesPerDescriptor*: uint32
+    maxPipelineLayouts*: uint32
+
+  ObjectTableEntryNVX* = object
+    `type`*: ObjectEntryTypeNVX
+    flags*: ObjectEntryUsageFlagsNVX
+
+  ObjectTablePipelineEntryNVX* = object
+    `type`*: ObjectEntryTypeNVX
+    flags*: ObjectEntryUsageFlagsNVX
+    pipeline*: Pipeline
+
+  ObjectTableDescriptorSetEntryNVX* = object
+    `type`*: ObjectEntryTypeNVX
+    flags*: ObjectEntryUsageFlagsNVX
+    pipelineLayout*: PipelineLayout
+    descriptorSet*: DescriptorSet
+
+  ObjectTableVertexBufferEntryNVX* = object
+    `type`*: ObjectEntryTypeNVX
+    flags*: ObjectEntryUsageFlagsNVX
+    buffer*: Buffer
+
+  ObjectTableIndexBufferEntryNVX* = object
+    `type`*: ObjectEntryTypeNVX
+    flags*: ObjectEntryUsageFlagsNVX
+    buffer*: Buffer
+    indexType*: IndexType
+
+  ObjectTablePushConstantEntryNVX* = object
+    `type`*: ObjectEntryTypeNVX
+    flags*: ObjectEntryUsageFlagsNVX
+    pipelineLayout*: PipelineLayout
+    stageFlags*: ShaderStageFlags
+
+  CmdProcessCommandsNVX* = proc (commandBuffer: CommandBuffer; pProcessCommandsInfo: ptr CmdProcessCommandsInfoNVX) {.
+      cdecl.}
+  CmdReserveSpaceForCommandsNVX* = proc (commandBuffer: CommandBuffer;
+      pReserveSpaceInfo: ptr CmdReserveSpaceForCommandsInfoNVX) {.cdecl.}
+  CreateIndirectCommandsLayoutNVX* = proc (device: Device; pCreateInfo: ptr IndirectCommandsLayoutCreateInfoNVX;
+                                        pAllocator: ptr AllocationCallbacks;
+      pIndirectCommandsLayout: ptr IndirectCommandsLayoutNVX): Result {.cdecl.}
+  DestroyIndirectCommandsLayoutNVX* = proc (device: Device;
+      indirectCommandsLayout: IndirectCommandsLayoutNVX;
+      pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  CreateObjectTableNVX* = proc (device: Device;
+                             pCreateInfo: ptr ObjectTableCreateInfoNVX;
+                             pAllocator: ptr AllocationCallbacks;
+                             pObjectTable: ptr ObjectTableNVX): Result {.cdecl.}
+  DestroyObjectTableNVX* = proc (device: Device; objectTable: ObjectTableNVX;
+                              pAllocator: ptr AllocationCallbacks) {.cdecl.}
+  RegisterObjectsNVX* = proc (device: Device; objectTable: ObjectTableNVX;
+                           objectCount: uint32;
+                           ppObjectTableEntries: ptr ptr ObjectTableEntryNVX;
+                           pObjectIndices: ptr uint32): Result {.cdecl.}
+  UnregisterObjectsNVX* = proc (device: Device; objectTable: ObjectTableNVX;
+                             objectCount: uint32;
+                             pObjectEntryTypes: ptr ObjectEntryTypeNVX;
+                             pObjectIndices: ptr uint32): Result {.cdecl.}
+  GetPhysicalDeviceGeneratedCommandsPropertiesNVX* = proc (
+      physicalDevice: PhysicalDevice;
+      pFeatures: ptr DeviceGeneratedCommandsFeaturesNVX;
+      pLimits: ptr DeviceGeneratedCommandsLimitsNVX) {.cdecl.}
+
+
+
+
+
+when not defined(NO_PROTOTYPES):
+  proc cmdProcessCommandsNVX*(commandBuffer: CommandBuffer; pProcessCommandsInfo: ptr CmdProcessCommandsInfoNVX) {.
+      cdecl, importc: "vkCmdProcessCommandsNVX", dynlib: vulkandll.}
+  proc cmdReserveSpaceForCommandsNVX*(commandBuffer: CommandBuffer;
+      pReserveSpaceInfo: ptr CmdReserveSpaceForCommandsInfoNVX) {.cdecl,
+      importc: "vkCmdReserveSpaceForCommandsNVX", dynlib: vulkandll.}
+  proc createIndirectCommandsLayoutNVX*(device: Device; pCreateInfo: ptr IndirectCommandsLayoutCreateInfoNVX;
+                                       pAllocator: ptr AllocationCallbacks;
+      pIndirectCommandsLayout: ptr IndirectCommandsLayoutNVX): Result {.cdecl,
+      importc: "vkCreateIndirectCommandsLayoutNVX", dynlib: vulkandll.}
+  proc destroyIndirectCommandsLayoutNVX*(device: Device; indirectCommandsLayout: IndirectCommandsLayoutNVX;
+                                        pAllocator: ptr AllocationCallbacks) {.
+      cdecl, importc: "vkDestroyIndirectCommandsLayoutNVX", dynlib: vulkandll.}
+  proc createObjectTableNVX*(device: Device;
+                            pCreateInfo: ptr ObjectTableCreateInfoNVX;
+                            pAllocator: ptr AllocationCallbacks;
+                            pObjectTable: ptr ObjectTableNVX): Result {.cdecl,
+      importc: "vkCreateObjectTableNVX", dynlib: vulkandll.}
+  proc destroyObjectTableNVX*(device: Device; objectTable: ObjectTableNVX;
+                             pAllocator: ptr AllocationCallbacks) {.cdecl,
+      importc: "vkDestroyObjectTableNVX", dynlib: vulkandll.}
+  proc registerObjectsNVX*(device: Device; objectTable: ObjectTableNVX;
+                          objectCount: uint32;
+                          ppObjectTableEntries: ptr ptr ObjectTableEntryNVX;
+                          pObjectIndices: ptr uint32): Result {.cdecl,
+      importc: "vkRegisterObjectsNVX", dynlib: vulkandll.}
+  proc unregisterObjectsNVX*(device: Device; objectTable: ObjectTableNVX;
+                            objectCount: uint32;
+                            pObjectEntryTypes: ptr ObjectEntryTypeNVX;
+                            pObjectIndices: ptr uint32): Result {.cdecl,
+      importc: "vkUnregisterObjectsNVX", dynlib: vulkandll.}
+  proc getPhysicalDeviceGeneratedCommandsPropertiesNVX*(
+      physicalDevice: PhysicalDevice;
+      pFeatures: ptr DeviceGeneratedCommandsFeaturesNVX;
+      pLimits: ptr DeviceGeneratedCommandsLimitsNVX) {.cdecl,
+      importc: "vkGetPhysicalDeviceGeneratedCommandsPropertiesNVX",
+      dynlib: vulkandll.}
+const
+  NV_clip_space_w_scaling* = 1
+  NV_CLIP_SPACE_W_SCALING_SPEC_VERSION* = 1
+  NV_CLIP_SPACE_W_SCALING_EXTENSION_NAME* = "VK_NV_clip_space_w_scaling"
+
+type
+  ViewportWScalingNV* = object
+    xcoeff*: cfloat
+    ycoeff*: cfloat
+
+  PipelineViewportWScalingStateCreateInfoNV* = object
+    sType*: StructureType
+    pNext*: pointer
+    viewportWScalingEnable*: Bool32
+    viewportCount*: uint32
+    pViewportWScalings*: ptr ViewportWScalingNV
+
+  CmdSetViewportWScalingNV* = proc (commandBuffer: CommandBuffer;
+                                 firstViewport: uint32; viewportCount: uint32;
+                                 pViewportWScalings: ptr ViewportWScalingNV) {.
+      cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc cmdSetViewportWScalingNV*(commandBuffer: CommandBuffer;
+                                firstViewport: uint32; viewportCount: uint32;
+                                pViewportWScalings: ptr ViewportWScalingNV) {.
+      cdecl, importc: "vkCmdSetViewportWScalingNV", dynlib: vulkandll.}
+const
+  EXT_direct_mode_display* = 1
+  EXT_DIRECT_MODE_DISPLAY_SPEC_VERSION* = 1
+  EXT_DIRECT_MODE_DISPLAY_EXTENSION_NAME* = "VK_EXT_direct_mode_display"
+
+type
+  ReleaseDisplayEXT* = proc (physicalDevice: PhysicalDevice; display: DisplayKHR): Result {.
+      cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc releaseDisplayEXT*(physicalDevice: PhysicalDevice; display: DisplayKHR): Result {.
+      cdecl, importc: "vkReleaseDisplayEXT", dynlib: vulkandll.}
+when defined(USE_PLATFORM_XLIB_XRANDR_EXT):
+  const
+    EXT_acquire_xlib_display* = 1
+  const
+    EXT_ACQUIRE_XLIB_DISPLAY_SPEC_VERSION* = 1
+    EXT_ACQUIRE_XLIB_DISPLAY_EXTENSION_NAME* = "VK_EXT_acquire_xlib_display"
+  type
+    AcquireXlibDisplayEXT* = proc (physicalDevice: PhysicalDevice; dpy: ptr Display;
+                                display: DisplayKHR): Result {.cdecl.}
+    GetRandROutputDisplayEXT* = proc (physicalDevice: PhysicalDevice;
+                                   dpy: ptr Display; rrOutput: RROutput;
+                                   pDisplay: ptr DisplayKHR): Result {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc acquireXlibDisplayEXT*(physicalDevice: PhysicalDevice; dpy: ptr Display;
+                               display: DisplayKHR): Result {.cdecl,
+        importc: "vkAcquireXlibDisplayEXT", dynlib: vulkandll.}
+    proc getRandROutputDisplayEXT*(physicalDevice: PhysicalDevice;
+                                  dpy: ptr Display; rrOutput: RROutput;
+                                  pDisplay: ptr DisplayKHR): Result {.cdecl,
+        importc: "vkGetRandROutputDisplayEXT", dynlib: vulkandll.}
+const
+  EXT_display_surface_counter* = 1
+  EXT_DISPLAY_SURFACE_COUNTER_SPEC_VERSION* = 1
+  EXT_DISPLAY_SURFACE_COUNTER_EXTENSION_NAME* = "VK_EXT_display_surface_counter"
+
+type
+  SurfaceCounterFlagBitsEXT* {.size: sizeof(cint).} = enum
+    SURFACE_COUNTER_VBLANK_EXT = 0x00000001
+  SurfaceCounterFlagsEXT* = Flags
+  SurfaceCapabilities2EXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    minImageCount*: uint32
+    maxImageCount*: uint32
+    currentExtent*: Extent2D
+    minImageExtent*: Extent2D
+    maxImageExtent*: Extent2D
+    maxImageArrayLayers*: uint32
+    supportedTransforms*: SurfaceTransformFlagsKHR
+    currentTransform*: SurfaceTransformFlagBitsKHR
+    supportedCompositeAlpha*: CompositeAlphaFlagsKHR
+    supportedUsageFlags*: ImageUsageFlags
+    supportedSurfaceCounters*: SurfaceCounterFlagsEXT
+
+  GetPhysicalDeviceSurfaceCapabilities2EXT* = proc (physicalDevice: PhysicalDevice;
+      surface: SurfaceKHR; pSurfaceCapabilities: ptr SurfaceCapabilities2EXT): Result {.
+      cdecl.}
+
+
+when not defined(NO_PROTOTYPES):
+  proc getPhysicalDeviceSurfaceCapabilities2EXT*(physicalDevice: PhysicalDevice;
+      surface: SurfaceKHR; pSurfaceCapabilities: ptr SurfaceCapabilities2EXT): Result {.
+      cdecl, importc: "vkGetPhysicalDeviceSurfaceCapabilities2EXT",
+      dynlib: vulkandll.}
+const
+  EXT_display_control* = 1
+  EXT_DISPLAY_CONTROL_SPEC_VERSION* = 1
+  EXT_DISPLAY_CONTROL_EXTENSION_NAME* = "VK_EXT_display_control"
+
+type
+  DisplayPowerStateEXT* {.size: sizeof(cint).} = enum
+    OFF_EXT = 0, SUSPEND_EXT = 1, ON_EXT = 2
+  DeviceEventTypeEXT* {.size: sizeof(cint).} = enum
+    DEVICE_EVENT_TYPE_DISPLAY_HOTPLUG_EXT = 0
+  DisplayEventTypeEXT* {.size: sizeof(cint).} = enum
+    DISPLAY_EVENT_TYPE_FIRST_PIXEL_OUT_EXT = 0
+  DisplayPowerInfoEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    powerState*: DisplayPowerStateEXT
+
+  DeviceEventInfoEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    deviceEvent*: DeviceEventTypeEXT
+
+  DisplayEventInfoEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    displayEvent*: DisplayEventTypeEXT
+
+  SwapchainCounterCreateInfoEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    surfaceCounters*: SurfaceCounterFlagsEXT
+
+  DisplayPowerControlEXT* = proc (device: Device; display: DisplayKHR;
+                               pDisplayPowerInfo: ptr DisplayPowerInfoEXT): Result {.
+      cdecl.}
+  RegisterDeviceEventEXT* = proc (device: Device;
+                               pDeviceEventInfo: ptr DeviceEventInfoEXT;
+                               pAllocator: ptr AllocationCallbacks;
+                               pFence: ptr Fence): Result {.cdecl.}
+  RegisterDisplayEventEXT* = proc (device: Device; display: DisplayKHR;
+                                pDisplayEventInfo: ptr DisplayEventInfoEXT;
+                                pAllocator: ptr AllocationCallbacks;
+                                pFence: ptr Fence): Result {.cdecl.}
+  GetSwapchainCounterEXT* = proc (device: Device; swapchain: SwapchainKHR;
+                               counter: SurfaceCounterFlagBitsEXT;
+                               pCounterValue: ptr uint64): Result {.cdecl.}
+
+
+
+
+when not defined(NO_PROTOTYPES):
+  proc displayPowerControlEXT*(device: Device; display: DisplayKHR;
+                              pDisplayPowerInfo: ptr DisplayPowerInfoEXT): Result {.
+      cdecl, importc: "vkDisplayPowerControlEXT", dynlib: vulkandll.}
+  proc registerDeviceEventEXT*(device: Device;
+                              pDeviceEventInfo: ptr DeviceEventInfoEXT;
+                              pAllocator: ptr AllocationCallbacks;
+                              pFence: ptr Fence): Result {.cdecl,
+      importc: "vkRegisterDeviceEventEXT", dynlib: vulkandll.}
+  proc registerDisplayEventEXT*(device: Device; display: DisplayKHR;
+                               pDisplayEventInfo: ptr DisplayEventInfoEXT;
+                               pAllocator: ptr AllocationCallbacks;
+                               pFence: ptr Fence): Result {.cdecl,
+      importc: "vkRegisterDisplayEventEXT", dynlib: vulkandll.}
+  proc getSwapchainCounterEXT*(device: Device; swapchain: SwapchainKHR;
+                              counter: SurfaceCounterFlagBitsEXT;
+                              pCounterValue: ptr uint64): Result {.cdecl,
+      importc: "vkGetSwapchainCounterEXT", dynlib: vulkandll.}
+const
+  GOOGLE_display_timing* = 1
+  GOOGLE_DISPLAY_TIMING_SPEC_VERSION* = 1
+  GOOGLE_DISPLAY_TIMING_EXTENSION_NAME* = "VK_GOOGLE_display_timing"
+
+type
+  RefreshCycleDurationGOOGLE* = object
+    refreshDuration*: uint64
+
+  PastPresentationTimingGOOGLE* = object
+    presentID*: uint32
+    desiredPresentTime*: uint64
+    actualPresentTime*: uint64
+    earliestPresentTime*: uint64
+    presentMargin*: uint64
+
+  PresentTimeGOOGLE* = object
+    presentID*: uint32
+    desiredPresentTime*: uint64
+
+  PresentTimesInfoGOOGLE* = object
+    sType*: StructureType
+    pNext*: pointer
+    swapchainCount*: uint32
+    pTimes*: ptr PresentTimeGOOGLE
+
+  GetRefreshCycleDurationGOOGLE* = proc (device: Device; swapchain: SwapchainKHR;
+      pDisplayTimingProperties: ptr RefreshCycleDurationGOOGLE): Result {.cdecl.}
+  GetPastPresentationTimingGOOGLE* = proc (device: Device; swapchain: SwapchainKHR;
+                                        pPresentationTimingCount: ptr uint32;
+      pPresentationTimings: ptr PastPresentationTimingGOOGLE): Result {.cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc getRefreshCycleDurationGOOGLE*(device: Device; swapchain: SwapchainKHR;
+      pDisplayTimingProperties: ptr RefreshCycleDurationGOOGLE): Result {.cdecl,
+      importc: "vkGetRefreshCycleDurationGOOGLE", dynlib: vulkandll.}
+  proc getPastPresentationTimingGOOGLE*(device: Device; swapchain: SwapchainKHR;
+                                       pPresentationTimingCount: ptr uint32;
+      pPresentationTimings: ptr PastPresentationTimingGOOGLE): Result {.cdecl,
+      importc: "vkGetPastPresentationTimingGOOGLE", dynlib: vulkandll.}
+const
+  NV_sample_mask_override_coverage* = 1
+  NV_SAMPLE_MASK_OVERRIDE_COVERAGE_SPEC_VERSION* = 1
+  NV_SAMPLE_MASK_OVERRIDE_COVERAGE_EXTENSION_NAME* = "VK_NV_sample_mask_override_coverage"
+  NV_geometry_shader_passthrough* = 1
+  NV_GEOMETRY_SHADER_PASSTHROUGH_SPEC_VERSION* = 1
+  NV_GEOMETRY_SHADER_PASSTHROUGH_EXTENSION_NAME* = "VK_NV_geometry_shader_passthrough"
+  NV_viewport_array2* = 1
+  NV_VIEWPORT_ARRAY2_SPEC_VERSION* = 1
+  NV_VIEWPORT_ARRAY2_EXTENSION_NAME* = "VK_NV_viewport_array2"
+  NVX_multiview_per_view_attributes* = 1
+  NVX_MULTIVIEW_PER_VIEW_ATTRIBUTES_SPEC_VERSION* = 1
+  NVX_MULTIVIEW_PER_VIEW_ATTRIBUTES_EXTENSION_NAME* = "VK_NVX_multiview_per_view_attributes"
+
+type
+  PhysicalDeviceMultiviewPerViewAttributesPropertiesNVX* = object
+    sType*: StructureType
+    pNext*: pointer
+    perViewPositionAllComponents*: Bool32
+
+
+const
+  NV_viewport_swizzle* = 1
+  NV_VIEWPORT_SWIZZLE_SPEC_VERSION* = 1
+  NV_VIEWPORT_SWIZZLE_EXTENSION_NAME* = "VK_NV_viewport_swizzle"
+
+type
+  ViewportCoordinateSwizzleNV* {.size: sizeof(cint).} = enum
+    POSITIVE_X_NV = 0, NEGATIVE_X_NV = 1, POSITIVE_Y_NV = 2, NEGATIVE_Y_NV = 3,
+    POSITIVE_Z_NV = 4, NEGATIVE_Z_NV = 5, POSITIVE_W_NV = 6, NEGATIVE_W_NV = 7
+  PipelineViewportSwizzleStateCreateFlagsNV* = Flags
+  ViewportSwizzleNV* = object
+    x*: ViewportCoordinateSwizzleNV
+    y*: ViewportCoordinateSwizzleNV
+    z*: ViewportCoordinateSwizzleNV
+    w*: ViewportCoordinateSwizzleNV
+
+  PipelineViewportSwizzleStateCreateInfoNV* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineViewportSwizzleStateCreateFlagsNV
+    viewportCount*: uint32
+    pViewportSwizzles*: ptr ViewportSwizzleNV
+
+
+
+const
+  EXT_discard_rectangles* = 1
+  EXT_DISCARD_RECTANGLES_SPEC_VERSION* = 1
+  EXT_DISCARD_RECTANGLES_EXTENSION_NAME* = "VK_EXT_discard_rectangles"
+
+type
+  DiscardRectangleModeEXT* {.size: sizeof(cint).} = enum
+    INCLUSIVE_EXT = 0, EXCLUSIVE_EXT = 1
+  PipelineDiscardRectangleStateCreateFlagsEXT* = Flags
+  PhysicalDeviceDiscardRectanglePropertiesEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    maxDiscardRectangles*: uint32
+
+  PipelineDiscardRectangleStateCreateInfoEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    flags*: PipelineDiscardRectangleStateCreateFlagsEXT
+    discardRectangleMode*: DiscardRectangleModeEXT
+    discardRectangleCount*: uint32
+    pDiscardRectangles*: ptr Rect2D
+
+  CmdSetDiscardRectangleEXT* = proc (commandBuffer: CommandBuffer;
+                                  firstDiscardRectangle: uint32;
+                                  discardRectangleCount: uint32;
+                                  pDiscardRectangles: ptr Rect2D) {.cdecl.}
+
+
+when not defined(NO_PROTOTYPES):
+  proc cmdSetDiscardRectangleEXT*(commandBuffer: CommandBuffer;
+                                 firstDiscardRectangle: uint32;
+                                 discardRectangleCount: uint32;
+                                 pDiscardRectangles: ptr Rect2D) {.cdecl,
+      importc: "vkCmdSetDiscardRectangleEXT", dynlib: vulkandll.}
+const
+  EXT_swapchain_colorspace* = 1
+  EXT_SWAPCHAIN_COLOR_SPACE_SPEC_VERSION* = 2
+  EXT_SWAPCHAIN_COLOR_SPACE_EXTENSION_NAME* = "VK_EXT_swapchain_colorspace"
+  EXT_hdr_metadata* = 1
+  EXT_HDR_METADATA_SPEC_VERSION* = 1
+  EXT_HDR_METADATA_EXTENSION_NAME* = "VK_EXT_hdr_metadata"
+
+type
+  XYColorEXT* = object
+    x*: cfloat
+    y*: cfloat
+
+  HdrMetadataEXT* = object
+    sType*: StructureType
+    pNext*: pointer
+    displayPrimaryRed*: XYColorEXT
+    displayPrimaryGreen*: XYColorEXT
+    displayPrimaryBlue*: XYColorEXT
+    whitePoint*: XYColorEXT
+    maxLuminance*: cfloat
+    minLuminance*: cfloat
+    maxContentLightLevel*: cfloat
+    maxFrameAverageLightLevel*: cfloat
+
+  SetHdrMetadataEXT* = proc (device: Device; swapchainCount: uint32;
+                          pSwapchains: ptr SwapchainKHR;
+                          pMetadata: ptr HdrMetadataEXT) {.cdecl.}
+
+when not defined(NO_PROTOTYPES):
+  proc setHdrMetadataEXT*(device: Device; swapchainCount: uint32;
+                         pSwapchains: ptr SwapchainKHR;
+                         pMetadata: ptr HdrMetadataEXT) {.cdecl,
+      importc: "vkSetHdrMetadataEXT", dynlib: vulkandll.}
+when defined(USE_PLATFORM_IOS_MVK):
+  const
+    MVK_ios_surface* = 1
+    MVK_IOS_SURFACE_SPEC_VERSION* = 2
+    MVK_IOS_SURFACE_EXTENSION_NAME* = "VK_MVK_ios_surface"
+  type
+    IOSSurfaceCreateFlagsMVK* = Flags
+    IOSSurfaceCreateInfoMVK* = object
+      sType*: StructureType
+      pNext*: pointer
+      flags*: IOSSurfaceCreateFlagsMVK
+      pView*: pointer
+
+    CreateIOSSurfaceMVK* = proc (instance: Instance;
+                              pCreateInfo: ptr IOSSurfaceCreateInfoMVK;
+                              pAllocator: ptr AllocationCallbacks;
+                              pSurface: ptr SurfaceKHR): Result {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc createIOSSurfaceMVK*(instance: Instance;
+                             pCreateInfo: ptr IOSSurfaceCreateInfoMVK;
+                             pAllocator: ptr AllocationCallbacks;
+                             pSurface: ptr SurfaceKHR): Result {.cdecl,
+        importc: "vkCreateIOSSurfaceMVK", dynlib: vulkandll.}
+when defined(USE_PLATFORM_MACOS_MVK):
+  const
+    MVK_macos_surface* = 1
+    MVK_MACOS_SURFACE_SPEC_VERSION* = 2
+    MVK_MACOS_SURFACE_EXTENSION_NAME* = "VK_MVK_macos_surface"
+  type
+    MacOSSurfaceCreateFlagsMVK* = Flags
+    MacOSSurfaceCreateInfoMVK* = object
+      sType*: StructureType
+      pNext*: pointer
+      flags*: MacOSSurfaceCreateFlagsMVK
+      pView*: pointer
+
+    CreateMacOSSurfaceMVK* = proc (instance: Instance;
+                                pCreateInfo: ptr MacOSSurfaceCreateInfoMVK;
+                                pAllocator: ptr AllocationCallbacks;
+                                pSurface: ptr SurfaceKHR): Result {.cdecl.}
+  when not defined(NO_PROTOTYPES):
+    proc createMacOSSurfaceMVK*(instance: Instance;
+                               pCreateInfo: ptr MacOSSurfaceCreateInfoMVK;
+                               pAllocator: ptr AllocationCallbacks;
+                               pSurface: ptr SurfaceKHR): Result {.cdecl,
+        importc: "vkCreateMacOSSurfaceMVK", dynlib: vulkandll.}
