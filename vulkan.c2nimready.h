@@ -41,6 +41,7 @@
 #  mangle "'vkW'{.*}" "w$1"
 #  mangle PFN_vkDebugReportCallbackEXT FnDebugReportCallbackEXT
 #  prefix PFN_vk
+#  mangle "'VK_MAKE_VERSION'" "makeVersion"
 //#  mangle "'PFN_vk'{.*}" "Fn$1"
 //#  prefix VK_STRUCTURE_TYPE_
 //#  mangle VK_STRUCTURE_TYPE_APPLICATION_INFO STRUCTURE_TYPE_APPLICATION_INFO
@@ -105,6 +106,7 @@
 #  prefix VK_SUBPASS_DESCRIPTION_
 #  prefix VK_COMMAND_POOL_CREATE_
 #  prefix VK_COMMAND_POOL_RESET_
+#  prefix VK_DEBUG_REPORT_
 #  prefix vk
 #  prefix Vk
 #  prefix VK_

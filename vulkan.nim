@@ -54,12 +54,12 @@ const
   VERSION_1_0* = 1
 
 
-template MAKE_VERSION*(major, minor, patch: untyped): untyped =
+template makeVersion*(major, minor, patch: untyped): untyped =
   (((major) shl 22) or ((minor) shl 12) or (patch))
 
 
 const
-  API_VERSION_1_0* = MAKE_VERSION(1, 0, 0)
+  API_VERSION_1_0* = makeVersion(1, 0, 0)
 
 template VERSION_MAJOR*(version: untyped): untyped =
   ((uint32)(version) shr 22)
@@ -3269,13 +3269,11 @@ type
     INDIRECT_COMMANDS_LAYOUT_NVX_EXT = 32,
     DESCRIPTOR_UPDATE_TEMPLATE_KHR_EXT = 1000085000
   DebugReportErrorEXT* {.size: sizeof(cint).} = enum
-    DEBUG_REPORT_ERROR_NONE_EXT = 0, DEBUG_REPORT_ERROR_CALLBACK_REF_EXT = 1
+    ERROR_NONE_EXT = 0, ERROR_CALLBACK_REF_EXT = 1
   DebugReportFlagBitsEXT* {.size: sizeof(cint).} = enum
-    DEBUG_REPORT_INFORMATION_BIT_EXT = 0x00000001,
-    DEBUG_REPORT_WARNING_BIT_EXT = 0x00000002,
-    DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT = 0x00000004,
-    DEBUG_REPORT_ERROR_BIT_EXT = 0x00000008,
-    DEBUG_REPORT_DEBUG_BIT_EXT = 0x00000010
+    INFORMATION_BIT_EXT = 0x00000001, WARNING_BIT_EXT = 0x00000002,
+    PERFORMANCE_WARNING_BIT_EXT = 0x00000004, ERROR_BIT_EXT = 0x00000008,
+    DEBUG_BIT_EXT = 0x00000010
   DebugReportFlagsEXT* = Flags
   FnDebugReportCallbackEXT* = proc (flags: DebugReportFlagsEXT;
                                  objectType: DebugReportObjectTypeEXT;
